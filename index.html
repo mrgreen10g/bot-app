@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки Рендера</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 15px;
+            margin: 0;
+        }
+        h3 { margin-top: 0; color: var(--tg-theme-text-color, #000); }
+        .section {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group:last-child { margin-bottom: 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
+        select, input[type="text"] {
+            width: 100%; padding: 10px; box-sizing: border-box;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px; font-size: 14px; outline: none;
+        }
+        input[type="range"] { width: 100%; margin-top: 5px; }
+        .value-badge { float: right; color: var(--tg-theme-button-color, #2481cc); font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="section">
+        <h3>🎬 Базовые настройки</h3>
+        <div class="form-group">
+            <label>Тематика перевода</label>
+            <select id="theme">
+                <option value="general">🌍 Обычная (Литературная)</option>
+                <option value="cs2">🔫 CS2 / Киберспорт</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Голос озвучки</label>
+            <select id="voice">
+                <option value="male">👨 Маркус</option>
+                <option value="female">👩 Рэйчел</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Фоновая музыка</label>
+            <select id="music">
+                <option value="none">🔇 Без музыки</option>
+                <option value="mu_space">🚀 Космическая</option>
+                <option value="mu_funny">🤡 Веселая</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>👁 Визуал (Блюр и Сабы)</h3>
+        <div class="form-group">
+            <label>Высота блюра: <span id="blur_val" class="value-badge">15%</span></label>
+            <input type="range" id="blur_zone" min="10" max="90" step="5" value="15" oninput="document.getElementById('blur_val').innerText = this.value + '%'">
+        </div>
+        <div class="form-group">
+            <label>Ширина блюра</label>
+            <select id="size">
+                <option value="sz_12">📏 Узкий (12%)</option>
+                <option value="sz_15">📏 Средний (15%)</option>
+                <option value="sz_20">📏 Широкий (20%)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Размер субтитров</label>
+            <select id="font_size">
+                <option value="fs_small">🔎 Маленький</option>
+                <option value="fs_medium">📝 Средний</option>
+                <option value="fs_large">📢 Крупный</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🖼 Баннер (Вотермарка)</h3>
+        <div class="form-group">
+            <label>Тип баннера</label>
+            <select id="banner_type" onchange="toggleBannerOptions()">
+                <option value="none">❌ Без баннера</option>
+                <option value="text">📝 Текстовый</option>
+                <option value="image">🖼 Картинка (Из галереи)</option>
+            </select>
+        </div>
+
+        <div id="text_options" class="hidden">
+            <div class="form-group">
+                <label>Текст баннера</label>
+                <input type="text" id="promo_text_content" placeholder="Введите текст...">
+            </div>
+            <div class="form-group">
+                <label>Позиция текста</label>
+                <select id="promo_zone">
+                    <option value="pz_10">⬆️ Сверху</option>
+                    <option value="pz_50">↔️ По центру</option>
+                    <option value="pz_85">⬇️ Снизу</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Размер текста</label>
+                <select id="promo_size">
+                    <option value="ps_30">Мелкий</option>
+                    <option value="ps_40">Средний</option>
+                    <option value="ps_50">Крупный</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="img_options" class="hidden">
+            <div class="form-group">
+                <label>Выбрать картинку из галереи</label>
+                <select id="img_selector">
+                    <option value="">Нет сохраненных картинок</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Позиция X (Слева-Направо): <span id="x_val" class="value-badge">50%</span></label>
+                <input type="range" id="img_pos_x" min="0" max="100" step="1" value="50" oninput="document.getElementById('x_val').innerText = this.value + '%'">
+            </div>
+            <div class="form-group">
+                <label>Позиция Y (Сверху-Вниз): <span id="y_val" class="value-badge">85%</span></label>
+                <input type="range" id="img_pos_y" min="0" max="100" step="1" value="85" oninput="document.getElementById('y_val').innerText = this.value + '%'">
+            </div>
+            <div class="form-group">
+                <label>Размер картинки: <span id="s_val" class="value-badge">25%</span></label>
+                <input type="range" id="img_scale" min="5" max="100" step="1" value="25" oninput="document.getElementById('s_val').innerText = this.value + '%'">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); 
+
+        function toggleBannerOptions() {
+            let type = document.getElementById("banner_type").value;
+            document.getElementById("text_options").style.display = (type === "text") ? "block" : "none";
+            document.getElementById("img_options").style.display = (type === "image") ? "block" : "none";
+        }
+
+        // Парсим данные, которые нам передал бот в ссылке
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataStr = urlParams.get('data');
+        
+        if (dataStr) {
+            try {
+                const data = JSON.parse(decodeURIComponent(dataStr));
+                const conf = data.c; // Конфиг
+                const images = data.i; // Массив названий картинок
+
+                // Заполняем текущие значения
+                document.getElementById("theme").value = conf.theme || "general";
+                document.getElementById("voice").value = conf.voice || "male";
+                document.getElementById("music").value = conf.music || "none";
+                
+                let b_zone = Math.round((conf.blur_zone || 0.15) * 100);
+                document.getElementById("blur_zone").value = b_zone;
+                document.getElementById("blur_val").innerText = b_zone + "%";
+                
+                document.getElementById("size").value = conf.size || "sz_15";
+                document.getElementById("font_size").value = conf.font_size || "fs_medium";
+                
+                document.getElementById("banner_type").value = conf.banner_type || "none";
+                document.getElementById("promo_text_content").value = conf.promo_text_content || "";
+                document.getElementById("promo_zone").value = conf.promo_zone || "pz_85";
+                document.getElementById("promo_size").value = conf.promo_size || "ps_40";
+
+                document.getElementById("img_pos_x").value = conf.img_pos_x || 50;
+                document.getElementById("x_val").innerText = (conf.img_pos_x || 50) + "%";
+                document.getElementById("img_pos_y").value = conf.img_pos_y || 85;
+                document.getElementById("y_val").innerText = (conf.img_pos_y || 85) + "%";
+                document.getElementById("img_scale").value = conf.img_scale || 25;
+                document.getElementById("s_val").innerText = (conf.img_scale || 25) + "%";
+
+                // Заполняем список картинок
+                let imgSelect = document.getElementById("img_selector");
+                if (images.length > 0) {
+                    imgSelect.innerHTML = ""; // Очищаем дефолт
+                    images.forEach((imgName, index) => {
+                        let opt = document.createElement('option');
+                        opt.value = index; // Передаем индекс картинки
+                        opt.innerHTML = "🖼 " + imgName;
+                        imgSelect.appendChild(opt);
+                    });
+                    
+                    // Выбираем активную картинку, если она была выбрана ранее
+                    if (conf.img_idx !== undefined && conf.img_idx < images.length) {
+                        imgSelect.value = conf.img_idx;
+                    }
+                }
+                
+                toggleBannerOptions();
+            } catch (e) {
+                console.error("Ошибка загрузки данных", e);
+            }
+        }
+
+        tg.MainButton.setText("СОХРАНИТЬ И ЗАКРЫТЬ");
+        tg.MainButton.show();
+
+        tg.MainButton.onClick(function() {
+            let result = {
+                theme: document.getElementById("theme").value,
+                voice: document.getElementById("voice").value,
+                music: document.getElementById("music").value,
+                blur_zone: parseInt(document.getElementById("blur_zone").value) / 100.0,
+                size: document.getElementById("size").value,
+                font_size: document.getElementById("font_size").value,
+                banner_type: document.getElementById("banner_type").value,
+                promo_text_content: document.getElementById("promo_text_content").value,
+                promo_zone: document.getElementById("promo_zone").value,
+                promo_size: document.getElementById("promo_size").value,
+                img_idx: document.getElementById("img_selector").value, // Передаем индекс выбранной картинки
+                img_pos_x: parseInt(document.getElementById("img_pos_x").value),
+                img_pos_y: parseInt(document.getElementById("img_pos_y").value),
+                img_scale: parseInt(document.getElementById("img_scale").value)
+            };
+            tg.sendData(JSON.stringify(result));
+            tg.close();
+        });
+    </script>
+</body>
+</html>
