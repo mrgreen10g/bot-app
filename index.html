@@ -2,219 +2,525 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройки Рендера</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ContentHijacker App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000000);
-            padding: 15px;
-            margin: 0;
+            margin: 0; padding: 0;
+            user-select: none;
         }
-        h3 { margin-top: 0; color: var(--tg-theme-text-color, #000); }
-        .section {
-            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
+        
+        /* HEADER */
+        .header {
+            padding: 15px; text-align: center; border-bottom: 1px solid var(--tg-theme-hint-color, #ccc);
+            font-size: 18px; font-weight: bold; background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
         }
+        .back-btn { color: var(--tg-theme-button-color, #2481cc); cursor: pointer; font-size: 14px; width: 60px; text-align: left; }
+        .header-title { flex-grow: 1; text-align: center; }
+        .header-spacer { width: 60px; }
+        
+        /* VIEWS */
+        .view { display: none; padding: 15px; padding-bottom: 80px; }
+        .view.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* HOME GRID */
+        .home-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+        }
+        .app-icon {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 18px; padding: 25px 10px; text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.1s;
+        }
+        .app-icon:active { transform: scale(0.95); }
+        .app-icon span.emoji { font-size: 40px; display: block; margin-bottom: 10px; }
+        .app-icon span.label { font-size: 13px; font-weight: 600; }
+        
+        /* FORMS & LISTS */
+        .section { background-color: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: var(--tg-theme-text-color, #000); }
         .form-group { margin-bottom: 15px; }
         .form-group:last-child { margin-bottom: 0; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; }
-        select, input[type="text"] {
-            width: 100%; padding: 10px; box-sizing: border-box;
-            background-color: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
-            border-radius: 8px; font-size: 14px; outline: none;
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+        select, input[type="text"], input[type="url"] {
+            width: 100%; padding: 12px; box-sizing: border-box;
+            background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000);
+            border: 1px solid var(--tg-theme-hint-color, #ccc); border-radius: 8px; font-size: 14px; outline: none;
+            -webkit-appearance: none; appearance: none;
         }
-        input[type="range"] { width: 100%; margin-top: 5px; }
+        input[type="range"] { width: 100%; margin-top: 5px; accent-color: var(--tg-theme-button-color, #2481cc); }
         .value-badge { float: right; color: var(--tg-theme-button-color, #2481cc); font-weight: bold; }
-        .hidden { display: none; }
+        
+        /* BUTTONS */
+        .btn {
+            background-color: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff);
+            border: none; padding: 12px 15px; border-radius: 8px; font-size: 15px; font-weight: bold;
+            cursor: pointer; width: 100%; margin-bottom: 10px; transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-secondary { background-color: var(--tg-theme-hint-color, #ccc); color: #000; }
+        .btn-danger { background-color: #e53935; color: #fff; }
+        .btn-success { background-color: #4CAF50; color: #fff; }
+        
+        /* LIST ITEMS */
+        .list-item {
+            background: var(--tg-theme-bg-color, #fff); padding: 12px; border-radius: 8px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+        }
+        .list-item:last-child { margin-bottom: 0; }
+        .list-item span.title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; font-weight: 500; }
+        .list-item-actions { display: flex; gap: 5px; }
+        .list-item button { padding: 6px 12px; font-size: 12px; margin: 0; width: auto; }
+        
+        .hidden { display: none !important; }
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-row input { flex-grow: 1; margin-bottom: 0; }
+        .flex-row button { width: auto; margin-bottom: 0; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-    <div class="section">
-        <h3>🎬 Базовые настройки</h3>
-        <div class="form-group">
-            <label>Тематика перевода</label>
-            <select id="theme">
-                <option value="general">🌍 Обычная (Литературная)</option>
-                <option value="cs2">🔫 CS2 / Киберспорт</option>
-            </select>
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view active">
+        <div class="header">
+            <span class="header-spacer"></span>
+            <span class="header-title">ContentHijacker</span>
+            <span class="header-spacer"></span>
         </div>
-        <div class="form-group">
-            <label>Голос озвучки</label>
-            <select id="voice">
-                <option value="male">👨 Маркус</option>
-                <option value="female">👩 Рэйчел</option>
-            </select>
+        <div class="section" style="text-align:center; padding: 15px;">
+            <p style="margin: 0; font-size: 15px;">Активная группа: <b id="home_active_group_label" style="color: var(--tg-theme-button-color);">1</b></p>
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--tg-theme-hint-color);">Видео в очереди: <b id="home_videos_count">0</b></p>
         </div>
-        <div class="form-group">
-            <label>Фоновая музыка</label>
-            <select id="music">
-                <option value="none">🔇 Без музыки</option>
-                <option value="mu_space">🚀 Космическая</option>
-                <option value="mu_funny">🤡 Веселая</option>
-            </select>
+        <div class="home-grid">
+            <div class="app-icon" onclick="showView('view-groups')">
+                <span class="emoji">📥</span><span class="label">Очередь & Ссылки</span>
+            </div>
+            <div class="app-icon" onclick="openVisuals('global')">
+                <span class="emoji">🎨</span><span class="label">Визуал Группы</span>
+            </div>
+            <div class="app-icon" onclick="showView('view-individual')">
+                <span class="emoji">🎬</span><span class="label">Точечная настройка</span>
+            </div>
+            <div class="app-icon" onclick="showView('view-prompts')">
+                <span class="emoji">🧠</span><span class="label">Промпты перевода</span>
+            </div>
+            <div class="app-icon" onclick="showView('view-templates')">
+                <span class="emoji">💾</span><span class="label">Шаблоны настроек</span>
+            </div>
+            <div class="app-icon" style="background:#e53935; color:#fff;" onclick="sendToBot('render')">
+                <span class="emoji">🚀</span><span class="label" style="color:#fff;">РЕНДЕР!</span>
+            </div>
         </div>
     </div>
 
-    <div class="section">
-        <h3>👁 Визуал (Блюр и Сабы)</h3>
-        <div class="form-group">
-            <label>Высота блюра: <span id="blur_val" class="value-badge">15%</span></label>
-            <input type="range" id="blur_zone" min="10" max="90" step="5" value="15" oninput="document.getElementById('blur_val').innerText = this.value + '%'">
+    <!-- GROUPS & QUEUE VIEW -->
+    <div id="view-groups" class="view">
+        <div class="header">
+            <span class="back-btn" onclick="showView('view-home')">🔙 Назад</span>
+            <span class="header-title">Очередь</span>
+            <span class="header-spacer"></span>
         </div>
-        <div class="form-group">
-            <label>Ширина блюра</label>
-            <select id="size">
-                <option value="sz_12">📏 Узкий (12%)</option>
-                <option value="sz_15">📏 Средний (15%)</option>
-                <option value="sz_20">📏 Широкий (20%)</option>
-            </select>
+        
+        <div class="section">
+            <h3>Активная группа</h3>
+            <select id="active_group_select" onchange="changeActiveGroup()"></select>
+            <div class="flex-row" style="margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="addNewGroup()">➕ Создать</button>
+                <button class="btn btn-secondary" onclick="cloneGroup()">👯 Клон</button>
+            </div>
+            <button class="btn btn-danger" style="margin-top:10px;" onclick="deleteGroup()">❌ Удалить группу</button>
         </div>
-        <div class="form-group">
-            <label>Размер субтитров</label>
-            <select id="font_size">
-                <option value="fs_small">🔎 Маленький</option>
-                <option value="fs_medium">📝 Средний</option>
-                <option value="fs_large">📢 Крупный</option>
-            </select>
+
+        <div class="section">
+            <h3>Добавить видео</h3>
+            <div class="flex-row">
+                <input type="url" id="new_video_url" placeholder="Ссылка на YouTube/TikTok...">
+                <button class="btn" onclick="addVideo()">➕</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Список видео в группе</h3>
+            <div id="videos_list"></div>
         </div>
     </div>
 
-    <div class="section">
-        <h3>🖼 Баннер (Вотермарка)</h3>
-        <div class="form-group">
-            <label>Тип баннера</label>
-            <select id="banner_type" onchange="toggleBannerOptions()">
-                <option value="none">❌ Без баннера</option>
-                <option value="text">📝 Текстовый</option>
-                <option value="image">🖼 Картинка (Из галереи)</option>
-            </select>
+    <!-- VISUAL SETTINGS VIEW -->
+    <div id="view-settings" class="view">
+        <div class="header">
+            <span class="back-btn" id="settings_back_btn" onclick="showView('view-home')">🔙 Назад</span>
+            <span class="header-title" id="settings_title">Визуал</span>
+            <span class="header-spacer"></span>
+        </div>
+        
+        <div class="section">
+            <h3>Базовые настройки</h3>
+            <div class="form-group">
+                <label>Тематика (Влияет на сленг)</label>
+                <select id="theme">
+                    <option value="general">🌍 Обычная (Литературная)</option>
+                    <option value="cs2">🔫 CS2 / Киберспорт</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Голос диктора</label>
+                <select id="voice">
+                    <option value="male">👨 Маркус (Мужской)</option>
+                    <option value="female">👩 Рэйчел (Женский)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Фоновая музыка</label>
+                <select id="music">
+                    <option value="none">🔇 Без музыки</option>
+                    <option value="mu_space">🚀 Космическая</option>
+                    <option value="mu_funny">🤡 Веселая</option>
+                </select>
+            </div>
         </div>
 
-        <div id="text_options" class="hidden">
+        <div class="section">
+            <h3>Блюр и Субтитры</h3>
             <div class="form-group">
-                <label>Текст баннера</label>
-                <input type="text" id="promo_text_content" placeholder="Введите текст...">
+                <label>Высота блюра: <span id="blur_val" class="value-badge">15%</span></label>
+                <input type="range" id="blur_zone" min="10" max="90" step="5" oninput="document.getElementById('blur_val').innerText = this.value + '%'">
             </div>
             <div class="form-group">
-                <label>Позиция текста</label>
-                <select id="promo_zone">
-                    <option value="pz_10">⬆️ Сверху</option>
-                    <option value="pz_50">↔️ По центру</option>
-                    <option value="pz_85">⬇️ Снизу</option>
+                <label>Ширина блюра</label>
+                <select id="size">
+                    <option value="sz_12">📏 Узкий (12%)</option>
+                    <option value="sz_15">📏 Средний (15%)</option>
+                    <option value="sz_20">📏 Широкий (20%)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Размер текста</label>
-                <select id="promo_size">
-                    <option value="ps_30">Мелкий</option>
-                    <option value="ps_40">Средний</option>
-                    <option value="ps_50">Крупный</option>
+                <label>Размер субтитров</label>
+                <select id="font_size">
+                    <option value="fs_small">🔎 Мелкий</option>
+                    <option value="fs_medium">📝 Средний</option>
+                    <option value="fs_large">📢 Крупный</option>
                 </select>
             </div>
         </div>
 
-        <div id="img_options" class="hidden">
+        <div class="section">
+            <h3>Баннер (Вотермарка)</h3>
             <div class="form-group">
-                <label>Выбрать картинку из галереи</label>
-                <select id="img_selector">
-                    <option value="">Нет сохраненных картинок</option>
+                <label>Тип баннера</label>
+                <select id="banner_type" onchange="toggleBannerOptions()">
+                    <option value="none">❌ Без баннера</option>
+                    <option value="text">📝 Текстовый</option>
+                    <option value="image">🖼 Картинка (Из галереи бота)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Позиция X (Слева-Направо): <span id="x_val" class="value-badge">50%</span></label>
-                <input type="range" id="img_pos_x" min="0" max="100" step="1" value="50" oninput="document.getElementById('x_val').innerText = this.value + '%'">
+
+            <div id="text_options" class="hidden">
+                <div class="form-group">
+                    <label>Текст для видео</label>
+                    <input type="text" id="promo_text_content" placeholder="Напиши текст...">
+                </div>
+                <div class="form-group">
+                    <label>Позиция текста</label>
+                    <select id="promo_zone">
+                        <option value="pz_10">⬆️ Верх</option>
+                        <option value="pz_50">↔️ Центр</option>
+                        <option value="pz_85">⬇️ Низ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Размер текста</label>
+                    <select id="promo_size">
+                        <option value="ps_30">Мелкий</option>
+                        <option value="ps_40">Средний</option>
+                        <option value="ps_50">Крупный</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Позиция Y (Сверху-Вниз): <span id="y_val" class="value-badge">85%</span></label>
-                <input type="range" id="img_pos_y" min="0" max="100" step="1" value="85" oninput="document.getElementById('y_val').innerText = this.value + '%'">
+
+            <div id="img_options" class="hidden">
+                <div class="form-group">
+                    <label>Выбрать логотип (Загрузи в бота заранее)</label>
+                    <select id="img_selector"></select>
+                </div>
+                <div class="form-group">
+                    <label>Ось X (Слева-Направо): <span id="x_val" class="value-badge"></span></label>
+                    <input type="range" id="img_pos_x" min="0" max="100" step="1" oninput="document.getElementById('x_val').innerText = this.value + '%'">
+                </div>
+                <div class="form-group">
+                    <label>Ось Y (Сверху-Вниз): <span id="y_val" class="value-badge"></span></label>
+                    <input type="range" id="img_pos_y" min="0" max="100" step="1" oninput="document.getElementById('y_val').innerText = this.value + '%'">
+                </div>
+                <div class="form-group">
+                    <label>Размер: <span id="s_val" class="value-badge"></span></label>
+                    <input type="range" id="img_scale" min="5" max="100" step="1" oninput="document.getElementById('s_val').innerText = this.value + '%'">
+                </div>
             </div>
-            <div class="form-group">
-                <label>Размер картинки: <span id="s_val" class="value-badge">25%</span></label>
-                <input type="range" id="img_scale" min="5" max="100" step="1" value="25" oninput="document.getElementById('s_val').innerText = this.value + '%'">
+        </div>
+        
+        <button class="btn btn-success" onclick="saveVisuals()">✅ Применить настройки</button>
+    </div>
+
+    <!-- INDIVIDUAL VIDEOS VIEW -->
+    <div id="view-individual" class="view">
+        <div class="header">
+            <span class="back-btn" onclick="showView('view-home')">🔙 Назад</span>
+            <span class="header-title">Выбор видео</span>
+            <span class="header-spacer"></span>
+        </div>
+        <div class="section">
+            <h3>Видео в активной группе</h3>
+            <p style="font-size: 13px; color: var(--tg-theme-hint-color);">Выберите конкретное видео, чтобы изменить настройки только для него.</p>
+            <div id="indiv_videos_list"></div>
+        </div>
+    </div>
+
+    <!-- PROMPTS VIEW -->
+    <div id="view-prompts" class="view">
+        <div class="header">
+            <span class="back-btn" onclick="showView('view-home')">🔙 Назад</span>
+            <span class="header-title">Промпты</span>
+            <span class="header-spacer"></span>
+        </div>
+        <div class="section">
+            <h3>Активный промпт группы</h3>
+            <input type="text" id="active_prompt" placeholder="Без дополнительных правил">
+            <button class="btn" style="margin-top:15px;" onclick="applyPrompt()">Применить к группе</button>
+        </div>
+        <div class="section">
+            <h3>Добавить в базу</h3>
+            <div class="flex-row">
+                <input type="text" id="new_prompt_text" placeholder="Напишите правило (например: Не переводи слово kill)...">
+                <button class="btn" onclick="addPrompt()">💾</button>
             </div>
+        </div>
+        <div class="section">
+            <h3>Сохраненные промпты</h3>
+            <div id="prompts_list"></div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES VIEW -->
+    <div id="view-templates" class="view">
+        <div class="header">
+            <span class="back-btn" onclick="showView('view-home')">🔙 Назад</span>
+            <span class="header-title">Шаблоны</span>
+            <span class="header-spacer"></span>
+        </div>
+        <div class="section">
+            <h3>Сохранить текущие настройки</h3>
+            <p style="font-size: 13px; color: var(--tg-theme-hint-color);">Сохранит все визуальные настройки активной группы.</p>
+            <div class="flex-row">
+                <input type="text" id="new_tpl_name" placeholder="Мой крутой шаблон 1...">
+                <button class="btn btn-success" onclick="saveTemplate()">💾</button>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Мои шаблоны</h3>
+            <div id="templates_list"></div>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand(); 
+        
+        const DEFAULT_CONFIG = { theme: "general", voice: "male", music: "none", blur_zone: 0.15, size: "sz_12", font_size: "fs_medium", prompt_text_content: "", banner_type: "none", promo_zone: "pz_85", promo_size: "ps_40", promo_text_content: "Получи БЕСПЛАТНЫЙ разбор...", img_idx: 0, img_pos_x: 50, img_pos_y: 85, img_scale: 25 };
 
+        // Глобальный State приложения
+        let appState = {
+            groups: [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}],
+            activeGroupIdx: 0,
+            prompts: [], templates: {}, images: []
+        };
+        
+        let editingTarget = 'global'; // 'global' или индекс видео
+
+        // Инициализация при запуске
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataStr = urlParams.get('data');
+            if (dataStr) {
+                const data = JSON.parse(decodeURIComponent(dataStr));
+                if(data.groups && data.groups.length > 0) appState.groups = data.groups;
+                if(data.active_group_idx !== undefined) appState.activeGroupIdx = data.active_group_idx;
+                if(data.prompts) appState.prompts = data.prompts;
+                if(data.templates) appState.templates = data.templates;
+                if(data.images) appState.images = data.images;
+            }
+        } catch(e) { console.error("Parse error", e); }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0); // Прокрутка наверх
+            if(viewId === 'view-home') renderHome();
+            if(viewId === 'view-groups') renderGroups();
+            if(viewId === 'view-individual') renderIndiv();
+            if(viewId === 'view-prompts') renderPrompts();
+            if(viewId === 'view-templates') renderTemplates();
+        }
+
+        function renderHome() {
+            document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
+            document.getElementById('home_videos_count').innerText = appState.groups[appState.activeGroupIdx].videos.length;
+            
+            tg.MainButton.setText("💾 СИНХРОНИЗИРОВАТЬ И ЗАКРЫТЬ");
+            tg.MainButton.color = "#2481cc";
+            tg.MainButton.show();
+            tg.MainButton.onClick(saveAndClose);
+        }
+        
+        function saveAndClose() {
+            sendToBot('save');
+        }
+
+        // --- GROUPS & QUEUE ---
+        function renderGroups() {
+            let sel = document.getElementById("active_group_select");
+            sel.innerHTML = "";
+            appState.groups.forEach((g, i) => {
+                let opt = document.createElement("option");
+                opt.value = i; opt.innerText = `Группа ${i+1} (${g.videos.length} видео)`;
+                if(i === appState.activeGroupIdx) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            renderVideosList();
+        }
+
+        function changeActiveGroup() {
+            appState.activeGroupIdx = parseInt(document.getElementById("active_group_select").value);
+            renderGroups();
+        }
+
+        function addNewGroup() {
+            appState.groups.push({id: appState.groups.length+1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)});
+            appState.activeGroupIdx = appState.groups.length - 1;
+            renderGroups();
+        }
+
+        function cloneGroup() {
+            let curr = appState.groups[appState.activeGroupIdx];
+            let newVids = curr.videos.map(v => Object.assign({}, v, {id: Math.random().toString(36).substr(2, 8)}));
+            appState.groups.push({id: appState.groups.length+1, videos: newVids, config: Object.assign({}, curr.config)});
+            appState.activeGroupIdx = appState.groups.length - 1;
+            renderGroups();
+            tg.showAlert("Группа успешно клонирована!");
+        }
+
+        function deleteGroup() {
+            if(appState.groups.length <= 1) return tg.showAlert("Нельзя удалить единственную группу!");
+            appState.groups.splice(appState.activeGroupIdx, 1);
+            appState.activeGroupIdx = Math.max(0, appState.activeGroupIdx - 1);
+            renderGroups();
+        }
+
+        function addVideo() {
+            let url = document.getElementById("new_video_url").value.trim();
+            if(!url) return;
+            appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
+            document.getElementById("new_video_url").value = "";
+            renderGroups();
+        }
+
+        function deleteVideo(idx) {
+            appState.groups[appState.activeGroupIdx].videos.splice(idx, 1);
+            renderGroups();
+        }
+
+        function renderVideosList() {
+            let list = document.getElementById("videos_list");
+            list.innerHTML = "";
+            let vids = appState.groups[appState.activeGroupIdx].videos;
+            if(vids.length === 0) {
+                list.innerHTML = "<p style='color: var(--tg-theme-hint-color); text-align: center; margin-top: 20px;'>Очередь пуста.<br>Вставьте ссылку выше.</p>";
+            }
+            vids.forEach((v, i) => {
+                let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
+                list.innerHTML += `<div class="list-item">
+                    <span class="title">🎬 ${displayUrl}</span>
+                    <div class="list-item-actions">
+                        <button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // --- VISUAL SETTINGS ---
         function toggleBannerOptions() {
             let type = document.getElementById("banner_type").value;
             document.getElementById("text_options").style.display = (type === "text") ? "block" : "none";
             document.getElementById("img_options").style.display = (type === "image") ? "block" : "none";
         }
 
-        // Парсим данные, которые нам передал бот в ссылке
-        const urlParams = new URLSearchParams(window.location.search);
-        const dataStr = urlParams.get('data');
-        
-        if (dataStr) {
-            try {
-                const data = JSON.parse(decodeURIComponent(dataStr));
-                const conf = data.c; // Конфиг
-                const images = data.i; // Массив названий картинок
-
-                // Заполняем текущие значения
-                document.getElementById("theme").value = conf.theme || "general";
-                document.getElementById("voice").value = conf.voice || "male";
-                document.getElementById("music").value = conf.music || "none";
-                
-                let b_zone = Math.round((conf.blur_zone || 0.15) * 100);
-                document.getElementById("blur_zone").value = b_zone;
-                document.getElementById("blur_val").innerText = b_zone + "%";
-                
-                document.getElementById("size").value = conf.size || "sz_15";
-                document.getElementById("font_size").value = conf.font_size || "fs_medium";
-                
-                document.getElementById("banner_type").value = conf.banner_type || "none";
-                document.getElementById("promo_text_content").value = conf.promo_text_content || "";
-                document.getElementById("promo_zone").value = conf.promo_zone || "pz_85";
-                document.getElementById("promo_size").value = conf.promo_size || "ps_40";
-
-                document.getElementById("img_pos_x").value = conf.img_pos_x || 50;
-                document.getElementById("x_val").innerText = (conf.img_pos_x || 50) + "%";
-                document.getElementById("img_pos_y").value = conf.img_pos_y || 85;
-                document.getElementById("y_val").innerText = (conf.img_pos_y || 85) + "%";
-                document.getElementById("img_scale").value = conf.img_scale || 25;
-                document.getElementById("s_val").innerText = (conf.img_scale || 25) + "%";
-
-                // Заполняем список картинок
-                let imgSelect = document.getElementById("img_selector");
-                if (images.length > 0) {
-                    imgSelect.innerHTML = ""; // Очищаем дефолт
-                    images.forEach((imgName, index) => {
-                        let opt = document.createElement('option');
-                        opt.value = index; // Передаем индекс картинки
-                        opt.innerHTML = "🖼 " + imgName;
-                        imgSelect.appendChild(opt);
-                    });
-                    
-                    // Выбираем активную картинку, если она была выбрана ранее
-                    if (conf.img_idx !== undefined && conf.img_idx < images.length) {
-                        imgSelect.value = conf.img_idx;
-                    }
-                }
-                
-                toggleBannerOptions();
-            } catch (e) {
-                console.error("Ошибка загрузки данных", e);
+        function openVisuals(target) {
+            editingTarget = target;
+            let conf = {};
+            
+            if(target === 'global') {
+                document.getElementById('settings_title').innerText = "Визуал Группы " + (appState.activeGroupIdx + 1);
+                document.getElementById('settings_back_btn').onclick = () => showView('view-home');
+                conf = appState.groups[appState.activeGroupIdx].config;
+            } else {
+                document.getElementById('settings_title').innerText = `Визуал Видео ${target+1}`;
+                document.getElementById('settings_back_btn').onclick = () => showView('view-individual');
+                let globalConf = appState.groups[appState.activeGroupIdx].config;
+                let indivConf = appState.groups[appState.activeGroupIdx].videos[target].settings;
+                conf = Object.assign({}, globalConf, indivConf);
             }
+
+            // Fill values
+            document.getElementById("theme").value = conf.theme || "general";
+            document.getElementById("voice").value = conf.voice || "male";
+            document.getElementById("music").value = conf.music || "none";
+            document.getElementById("blur_zone").value = Math.round((conf.blur_zone || 0.15) * 100);
+            document.getElementById("blur_val").innerText = document.getElementById("blur_zone").value + "%";
+            document.getElementById("size").value = conf.size || "sz_12";
+            document.getElementById("font_size").value = conf.font_size || "fs_medium";
+            
+            document.getElementById("banner_type").value = conf.banner_type || "none";
+            document.getElementById("promo_text_content").value = conf.promo_text_content || "";
+            document.getElementById("promo_zone").value = conf.promo_zone || "pz_85";
+            document.getElementById("promo_size").value = conf.promo_size || "ps_40";
+
+            document.getElementById("img_pos_x").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50;
+            document.getElementById("x_val").innerText = document.getElementById("img_pos_x").value + "%";
+            document.getElementById("img_pos_y").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
+            document.getElementById("y_val").innerText = document.getElementById("img_pos_y").value + "%";
+            document.getElementById("img_scale").value = conf.img_scale !== undefined ? conf.img_scale : 25;
+            document.getElementById("s_val").innerText = document.getElementById("img_scale").value + "%";
+
+            // Load images
+            let imgSelect = document.getElementById("img_selector");
+            imgSelect.innerHTML = "";
+            if (appState.images.length === 0) {
+                imgSelect.innerHTML = "<option value=''>Сначала загрузите картинку боту в чат</option>";
+            } else {
+                appState.images.forEach((imgName, index) => {
+                    let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgName;
+                    imgSelect.appendChild(opt);
+                });
+                if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) {
+                    imgSelect.value = conf.img_idx;
+                }
+            }
+
+            toggleBannerOptions();
+            showView('view-settings');
         }
 
-        tg.MainButton.setText("СОХРАНИТЬ И ЗАКРЫТЬ");
-        tg.MainButton.show();
-
-        tg.MainButton.onClick(function() {
-            let result = {
+        function saveVisuals() {
+            let conf = {
                 theme: document.getElementById("theme").value,
                 voice: document.getElementById("voice").value,
                 music: document.getElementById("music").value,
@@ -225,14 +531,133 @@
                 promo_text_content: document.getElementById("promo_text_content").value,
                 promo_zone: document.getElementById("promo_zone").value,
                 promo_size: document.getElementById("promo_size").value,
-                img_idx: document.getElementById("img_selector").value, // Передаем индекс выбранной картинки
+                img_idx: document.getElementById("img_selector").value ? parseInt(document.getElementById("img_selector").value) : 0,
                 img_pos_x: parseInt(document.getElementById("img_pos_x").value),
                 img_pos_y: parseInt(document.getElementById("img_pos_y").value),
                 img_scale: parseInt(document.getElementById("img_scale").value)
             };
-            tg.sendData(JSON.stringify(result));
+
+            if(editingTarget === 'global') {
+                appState.groups[appState.activeGroupIdx].config = conf;
+                tg.showAlert("Глобальные настройки группы сохранены!");
+                showView('view-home');
+            } else {
+                appState.groups[appState.activeGroupIdx].videos[editingTarget].settings = conf;
+                tg.showAlert("Индивидуальные настройки видео применены!");
+                showView('view-individual');
+            }
+        }
+
+        // --- INDIVIDUAL ---
+        function renderIndiv() {
+            let list = document.getElementById("indiv_videos_list");
+            list.innerHTML = "";
+            let vids = appState.groups[appState.activeGroupIdx].videos;
+            if(vids.length === 0) list.innerHTML = "<p style='color: var(--tg-theme-hint-color); text-align: center;'>Очередь пуста. Добавьте ссылки в разделе 'Очередь & Ссылки'.</p>";
+            
+            vids.forEach((v, i) => {
+                let hasSettings = Object.keys(v.settings).length > 0;
+                let mark = hasSettings ? "⚠️ Свои настройки" : "Как у группы";
+                list.innerHTML += `<div class="list-item">
+                    <span class="title">Видео ${i+1}<br><small style="color:var(--tg-theme-hint-color); font-weight:normal;">${mark}</small></span>
+                    <div class="list-item-actions">
+                        ${hasSettings ? `<button class="btn btn-secondary" onclick="resetIndiv(${i})">Сброс</button>` : ''}
+                        <button class="btn" onclick="openVisuals(${i})">Настроить</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function resetIndiv(idx) {
+            appState.groups[appState.activeGroupIdx].videos[idx].settings = {};
+            renderIndiv();
+        }
+
+        // --- PROMPTS ---
+        function renderPrompts() {
+            document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
+            let list = document.getElementById("prompts_list");
+            list.innerHTML = "";
+            if (appState.prompts.length === 0) list.innerHTML = "<p style='color: var(--tg-theme-hint-color);'>База пуста.</p>";
+            appState.prompts.forEach((p, i) => {
+                list.innerHTML += `<div class="list-item">
+                    <span class="title">${p}</span>
+                    <div class="list-item-actions">
+                        <button class="btn btn-danger" onclick="delPrompt(${i})">❌</button>
+                        <button class="btn" onclick="selPrompt(${i})">Выбрать</button>
+                    </div>
+                </div>`;
+            });
+        }
+        function addPrompt() {
+            let t = document.getElementById("new_prompt_text").value.trim();
+            if(t) { appState.prompts.push(t); document.getElementById("new_prompt_text").value = ""; renderPrompts(); }
+        }
+        function selPrompt(idx) { 
+            document.getElementById("active_prompt").value = appState.prompts[idx]; 
+        }
+        function delPrompt(idx) { 
+            appState.prompts.splice(idx, 1); renderPrompts(); 
+        }
+        function applyPrompt() {
+            appState.groups[appState.activeGroupIdx].config.prompt_text_content = document.getElementById("active_prompt").value;
+            tg.showAlert("Промпт применен к текущей группе!");
+            showView('view-home');
+        }
+
+        // --- TEMPLATES ---
+        function renderTemplates() {
+            let list = document.getElementById("templates_list");
+            list.innerHTML = "";
+            let keys = Object.keys(appState.templates);
+            if (keys.length === 0) list.innerHTML = "<p style='color: var(--tg-theme-hint-color);'>Нет сохраненных шаблонов.</p>";
+            for (let name in appState.templates) {
+                list.innerHTML += `<div class="list-item">
+                    <span class="title">📂 ${name}</span>
+                    <div class="list-item-actions">
+                        <button class="btn btn-danger" onclick="delTemplate('${name}')">❌</button>
+                        <button class="btn" onclick="applyTemplate('${name}')">Применить</button>
+                    </div>
+                </div>`;
+            }
+        }
+        function saveTemplate() {
+            let name = document.getElementById("new_tpl_name").value.trim();
+            if(name) {
+                appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config);
+                document.getElementById("new_tpl_name").value = ""; 
+                renderTemplates();
+                tg.showAlert(`Шаблон '${name}' сохранен!`);
+            }
+        }
+        function applyTemplate(name) {
+            appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]);
+            tg.showAlert(`Шаблон '${name}' успешно применен к группе!`);
+            showView('view-home');
+        }
+        function delTemplate(name) { 
+            delete appState.templates[name]; renderTemplates(); 
+        }
+
+        // --- BOT COMMUNICATION ---
+        function sendToBot(action) {
+            // Если нажимаем рендер, проверяем есть ли видео
+            if (action === 'render') {
+                let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
+                if (totalVids === 0) {
+                    tg.showAlert("Очередь пуста! Добавьте ссылки на видео перед рендером.");
+                    return;
+                }
+            }
+            
+            tg.MainButton.offClick(saveAndClose);
+            let payload = { action: action, state: appState };
+            tg.sendData(JSON.stringify(payload));
             tg.close();
-        });
+        }
+
+        // Start app
+        showView('view-home');
     </script>
 </body>
 </html>
