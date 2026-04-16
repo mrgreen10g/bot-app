@@ -11,9 +11,9 @@
         :root {
             --bg-main: #0d0d0f;
             --bg-card: #18181c;
-            --accent-main: #00ff88; /* Неоновый зеленый (взлом) */
+            --accent-main: #00ff88; 
             --accent-danger: #ff3366;
-            --accent-gold: #ffcc00; /* Пиратское золото */
+            --accent-gold: #ffcc00; 
             --text-main: #e0e0e0;
             --text-muted: #888888;
             --border-color: #2a2a35;
@@ -86,7 +86,7 @@
         }
         select:focus, input[type="text"]:focus, input[type="url"]:focus { border-color: var(--accent-main); box-shadow: 0 0 8px rgba(0,255,136,0.2); }
         
-        /* SLIDERS - Cyberpunk style */
+        /* SLIDERS */
         input[type="range"] { 
             -webkit-appearance: none; width: 100%; height: 6px; background: #000; 
             border-radius: 3px; outline: none; border: 1px solid var(--border-color); margin-top: 8px;
@@ -201,13 +201,13 @@
         <div class="section">
             <h3>Добавить цель (Видео)</h3>
             <div class="flex-row">
-                <input type="url" id="new_video_url" placeholder="Ссылка (YouTube/TikTok/Insta)...">
+                <input type="url" id="new_video_url" placeholder="Ссылка (YouTube/TikTok)...">
                 <button class="btn btn-primary" onclick="addVideo()">➕</button>
             </div>
         </div>
         <div class="section">
             <h3>Список видео в группе</h3>
-            <p style="font-size: 11px; color: var(--text-muted); margin-top: -10px;">Нажмите 👁 для быстрого просмотра кадра</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: -10px;">Нажмите 👁 для загрузки кадра в редактор</p>
             <div id="videos_list"></div>
         </div>
     </div>
@@ -306,7 +306,7 @@
                             <button class="btn btn-danger" onclick="deleteImageBanner()" title="Удалить">🗑</button>
                         </div>
                     </div>
-                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">📸 Загрузить новую</button>
+                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">📸 Загрузить новую в чате</button>
                 </div>
             </div>
         </div>
@@ -402,7 +402,12 @@
         tg.setHeaderColor('#18181c');
         tg.setBackgroundColor('#0d0d0f');
         
-        // Добавлен target_language
+        // Словарь для перевода слова СУБТИТРЫ на предпросмотре
+        const subTranslations = {
+            "ru": "СУБТИТРЫ", "en": "SUBTITLES", "es": "SUBTÍTULOS", 
+            "fr": "SOUS-TITRES", "de": "UNTERTITEL", "ar": "ترجمة", "hi": "उपशीर्षक"
+        };
+
         const DEFAULT_CONFIG = { 
             theme: "general", voice: "male", music: "none", target_language: "ru",
             blur_zone: 0.15, blur_width: 15, font_size: 85, 
@@ -428,7 +433,6 @@
                 if(data.prompts) appState.prompts = data.prompts;
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
-                // preview_img больше не забираем из URL, все хранится локально или парсится JS
             }
         } catch(e) { console.error("Parse error", e); }
 
@@ -486,7 +490,7 @@
         function renderGroups() {
             let sel = document.getElementById("active_group_select"); sel.innerHTML = "";
             appState.groups.forEach((g, i) => {
-                let opt = document.createElement("option"); opt.value = i; opt.innerText = `Группа ${i+1} (${g.videos.length} видео)`;
+                let opt = document.createElement("option"); opt.value = i; opt.innerText = `Флот ${i+1} (${g.videos.length} целей)`;
                 if(i === appState.activeGroupIdx) opt.selected = true;
                 sel.appendChild(opt);
             });
@@ -503,31 +507,29 @@
         }
         function deleteGroup() { if(appState.groups.length <= 1) return tg.showAlert("Нельзя удалить последнюю!"); appState.groups.splice(appState.activeGroupIdx, 1); appState.activeGroupIdx = Math.max(0, appState.activeGroupIdx - 1); saveStateLocally(); renderGroups(); }
 
-        // --- МАГИЯ: ЛОКАЛЬНЫЙ ПАРСЕР ПРЕВЬЮ БЕЗ БОТА ---
+        // --- ЛОКАЛЬНЫЙ ПАРСЕР ПРЕВЬЮ БЕЗ БОТА ---
         async function fetchPreviewLocal(url) {
             try {
                 let ytMatch = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([0-9A-Za-z_-]{11})/);
                 if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
                 
-                // Для TikTok используем публичные oEmbed парсеры
-                if (url.includes("tiktok.com")) {
-                    let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    let response = await fetch(proxyUrl);
+                if (url.includes("tiktok.com") || url.includes("douyin.com")) {
+                    let response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
                     let data = await response.json();
-                    let match = data.contents.match(/<meta property="og:image" content="([^"]+)"/);
-                    if (match) return match[1].replace(/&amp;/g, "&");
+                    if (data && data.data && data.data.cover) {
+                        return data.data.cover;
+                    }
                 }
             } catch (e) { console.error("Preview Fetch Error", e); }
             return "";
         }
 
-        // Загрузка превью по кнопке "Глаз"
         function loadPreviewForVideo(url) {
             document.getElementById('video_preview_box').style.backgroundImage = "none";
             document.getElementById('p_placeholder').style.display = 'flex';
             document.getElementById('p_placeholder').innerHTML = "<div class='spinner'></div><span>Перехват сигнала...</span>";
             
-            openVisuals('global'); // Перекидываем в визуал
+            openVisuals('global'); 
             
             fetchPreviewLocal(url).then(previewUrl => {
                 if(previewUrl) {
@@ -547,13 +549,13 @@
             appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
             document.getElementById("new_video_url").value = "";
             saveStateLocally(); renderGroups();
-            tg.showAlert("Видео добавлено в очередь захвата!");
+            tg.showAlert("Цель добавлена в очередь захвата!");
         }
         
         function deleteVideo(idx) { 
             appState.groups[appState.activeGroupIdx].videos.splice(idx, 1);
             if (appState.groups[appState.activeGroupIdx].videos.length === 0) {
-                appState.preview_img = ""; // Чистим превью если удалили всё
+                appState.preview_img = ""; 
             }
             saveStateLocally(); 
             if(document.getElementById('view-groups').classList.contains('active')) renderGroups();
@@ -570,11 +572,9 @@
                 
                 let actionsHTML = '';
                 if(containerId === 'videos_list') {
-                    // Список в Очереди
                     actionsHTML = `<button class="btn btn-primary" onclick="loadPreviewForVideo('${v.source}')" title="Предпросмотр">👁</button>
                                    <button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>`;
                 } else {
-                    // Список в Индивидуальных
                     actionsHTML = `${hasSettings ? `<button class="btn btn-secondary" onclick="resetIndiv(${i})">Сброс</button>` : ''}
                                    <button class="btn btn-primary" onclick="openVisuals(${i})">Настроить</button>`;
                 }
@@ -664,7 +664,6 @@
                 document.getElementById('settings_back_btn').onclick = () => showView('view-individual');
                 conf = Object.assign({}, appState.groups[appState.activeGroupIdx].config, appState.groups[appState.activeGroupIdx].videos[target].settings);
                 
-                // Если заходим в индивидуальное видео, подгружаем его превью
                 let vUrl = appState.groups[appState.activeGroupIdx].videos[target].source;
                 fetchPreviewLocal(vUrl).then(u => {
                     if(u) { appState.preview_img = u; saveStateLocally(); updatePreviewBG(); }
@@ -734,6 +733,7 @@
             const bWidth = document.getElementById('blur_width_slider').value; 
             const fSize = document.getElementById('font_size_slider').value;
             const bType = document.getElementById('banner_type').value;
+            const targetLang = document.getElementById('target_language').value;
             
             const blurLayer = document.getElementById('p_blur_layer');
             const startY = bZone - (bWidth / 2);
@@ -742,11 +742,12 @@
             const subsLayer = document.getElementById('p_subs_layer');
             subsLayer.style.top = bZone + '%'; subsLayer.style.transform = 'translateY(-50%)';
             subsLayer.style.fontSize = (fSize / 6) + 'px';
+            subsLayer.innerText = subTranslations[targetLang] || "СУБТИТРЫ";
 
             const bannerLayer = document.getElementById('p_banner_layer');
             
             if (bType === 'text') {
-                const pText = document.getElementById('promo_text_content').value || "ТЕКСТ БАННЕРА";
+                const pText = document.getElementById('promo_text_content').value || "ОФФЕР";
                 const pPosY = document.getElementById('promo_pos_y_slider').value;
                 const pSize = document.getElementById('promo_size_slider').value;
                 
@@ -806,10 +807,21 @@
             if (action === 'render') {
                 let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста! Добавьте цели для захвата.");
+                
+                let payload = { action: action, state: appState };
+                tg.sendData(JSON.stringify(payload));
+                
+                // ПОЛНАЯ ОЧИСТКА ПАМЯТИ ПОСЛЕ РЕНДЕРА
+                appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}];
+                appState.activeGroupIdx = 0;
+                appState.preview_img = "";
+                saveStateLocally();
+                tg.close();
+            } else {
+                let payload = { action: action, state: appState };
+                tg.sendData(JSON.stringify(payload));
+                tg.close();
             }
-            let payload = { action: action, state: appState };
-            tg.sendData(JSON.stringify(payload));
-            tg.close();
         }
 
         showView('view-home');
