@@ -8,8 +8,7 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            background-color: var(--tg-theme-bg-color, #ffffff); color: var(--tg-theme-text-color, #000000);
             margin: 0; padding: 0; user-select: none;
         }
         
@@ -45,9 +44,9 @@
         .form-group:last-child { margin-bottom: 0; }
         label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; color: var(--tg-theme-hint-color, #666); }
         select, input[type="text"], input[type="url"] {
-            width: 100%; padding: 12px; box-sizing: border-box;
-            background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000);
-            border: 1px solid var(--tg-theme-hint-color, #ccc); border-radius: 8px; font-size: 14px; outline: none;
+            width: 100%; padding: 12px; box-sizing: border-box; background-color: var(--tg-theme-bg-color, #fff); 
+            color: var(--tg-theme-text-color, #000); border: 1px solid var(--tg-theme-hint-color, #ccc); 
+            border-radius: 8px; font-size: 14px; outline: none;
         }
         input[type="range"] { width: 100%; margin-top: 5px; accent-color: var(--tg-theme-button-color, #2481cc); }
         
@@ -57,8 +56,7 @@
             border: 1px solid var(--tg-theme-hint-color, #ccc); margin-bottom: 15px;
         }
         .preview-container {
-            width: 160px; height: 284px; /* 9:16 aspect ratio */
-            background-color: #1a1a1a; background-size: cover; background-position: center;
+            width: 160px; height: 284px; background-color: #1a1a1a; background-size: cover; background-position: center;
             margin: 0 auto 15px auto; border-radius: 10px; position: relative; overflow: hidden;
             border: 3px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
@@ -77,13 +75,22 @@
             z-index: 2; pointer-events: none; line-height: 1.1;
         }
         .preview-banner {
-            position: absolute; width: 100%; text-align: center; color: #FFF; font-weight: 900; 
+            position: absolute; text-align: center; color: #FFF; font-weight: 900; 
             text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000;
             z-index: 3; pointer-events: none; line-height: 1.1; white-space: pre-wrap;
         }
-        .compact-group { background: var(--tg-theme-secondary-bg-color, #f9f9f9); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        
+        /* TABS UI */
+        .tabs { display: flex; margin-bottom: 15px; background: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 8px; padding: 4px; }
+        .tab-btn {
+            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; 
+            border-radius: 6px; transition: 0.2s; color: var(--tg-theme-hint-color, #666);
+        }
+        .tab-btn.active { background: var(--tg-theme-bg-color, #fff); box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: var(--tg-theme-button-color, #2481cc); }
+        .tab-content { display: none; background: var(--tg-theme-secondary-bg-color, #f9f9f9); padding: 15px; border-radius: 8px; }
+        .tab-content.active { display: block; animation: fadeIn 0.2s; }
 
-        /* BUTTONS */
+        /* BUTTONS & LISTS */
         .btn {
             background-color: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff);
             border: none; padding: 12px 15px; border-radius: 8px; font-size: 15px; font-weight: bold;
@@ -93,17 +100,13 @@
         .btn-secondary { background-color: var(--tg-theme-hint-color, #ccc); color: #000; }
         .btn-danger { background-color: #e53935; color: #fff; }
         .btn-success { background-color: #4CAF50; color: #fff; }
-        
-        /* LIST ITEMS */
         .list-item {
             background: var(--tg-theme-bg-color, #fff); padding: 12px; border-radius: 8px;
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--tg-theme-hint-color, #ccc);
         }
         .list-item span.title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; font-weight: 500; }
         .list-item-actions { display: flex; gap: 5px; }
         .list-item button { padding: 6px 12px; font-size: 12px; margin: 0; width: auto; }
-        
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-row input { flex-grow: 1; margin-bottom: 0; }
@@ -124,7 +127,7 @@
             <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">📥</span><span class="label">Очередь & Ссылки</span></div>
             <div class="app-icon" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Визуал Группы</span></div>
             <div class="app-icon" onclick="showView('view-individual')"><span class="emoji">🎬</span><span class="label">Точечная настройка</span></div>
-            <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты перевода</span></div>
+            <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты</span></div>
             <div class="app-icon" onclick="showView('view-templates')"><span class="emoji">💾</span><span class="label">Шаблоны</span></div>
             <div class="app-icon" style="background:#e53935; color:#fff;" onclick="sendToBot('render')"><span class="emoji">🚀</span><span class="label" style="color:#fff;">РЕНДЕР!</span></div>
         </div>
@@ -162,7 +165,7 @@
         </div>
         
         <div class="visual-editor-card">
-            <h3 style="text-align: center; margin-bottom: 15px;">Визуальный редактор</h3>
+            <h3 style="text-align: center; margin-bottom: 15px;">Настройка кадра</h3>
             
             <div class="preview-container" id="video_preview_box">
                 <div class="preview-placeholder" id="p_placeholder">Ожидание<br>кадра из видео</div>
@@ -171,7 +174,12 @@
                 <div id="p_banner_layer" class="preview-banner"></div>
             </div>
 
-            <div class="compact-group">
+            <div class="tabs">
+                <div class="tab-btn active" id="btn_tab_blur" onclick="switchVisualTab('blur')">Размытие</div>
+                <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Баннер</div>
+            </div>
+
+            <div id="tab_blur" class="tab-content active">
                 <div class="form-group">
                     <label>Позиция размытия (Центр Y)</label>
                     <input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1">
@@ -186,9 +194,9 @@
                 </div>
             </div>
 
-            <div class="compact-group">
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label style="color:#000; font-weight:bold;">Баннер (Вотермарка)</label>
+            <div id="tab_banner" class="tab-content">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label style="color:#000; font-weight:bold;">Тип баннера</label>
                     <select id="banner_type" class="auto-save-input" onchange="toggleBannerOptions()">
                         <option value="none">❌ Без баннера</option>
                         <option value="text">📝 Текстовый</option>
@@ -204,7 +212,7 @@
                     <div class="form-group">
                         <label>Текст (можно писать в несколько строк)</label>
                         <div class="flex-row">
-                            <input type="text" id="promo_text_content" class="auto-save-input" placeholder="Ваш крутой оффер...">
+                            <input type="text" id="promo_text_content" class="auto-save-input" placeholder="Ваш оффер...">
                             <button class="btn btn-success" onclick="saveTextBanner()">💾</button>
                         </div>
                     </div>
@@ -250,7 +258,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Голос диктора ElevenLabs</label>
+                <label>Голос диктора</label>
                 <select id="voice" class="auto-save-input">
                     <option value="male">👨 Маркус (Мужской)</option>
                     <option value="female">👩 Рэйчел (Женский)</option>
@@ -335,15 +343,25 @@
             const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                if(data.images) appState.images = data.images;
+                if(data.images) appState.images = data.images; // Теперь это массив объектов {name, url}
                 if(data.prompts) appState.prompts = data.prompts;
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
-                if(data.preview_img) appState.preview_img = data.preview_img; // Серверный превью всегда важнее локального!
+                if(data.preview_img) appState.preview_img = data.preview_img;
             }
         } catch(e) { console.error("Parse error", e); }
 
         function saveStateLocally() { localStorage.setItem('contentHijackerState', JSON.stringify(appState)); }
+
+        function switchVisualTab(tabId) {
+            document.getElementById('tab_blur').classList.remove('active');
+            document.getElementById('tab_banner').classList.remove('active');
+            document.getElementById('btn_tab_blur').classList.remove('active');
+            document.getElementById('btn_tab_banner').classList.remove('active');
+            
+            document.getElementById('tab_' + tabId).classList.add('active');
+            document.getElementById('btn_tab_' + tabId).classList.add('active');
+        }
 
         function toggleBannerOptions() {
             let type = document.getElementById("banner_type").value;
@@ -361,9 +379,7 @@
 
         document.querySelectorAll('.auto-save-input').forEach(input => {
             input.addEventListener('input', () => {
-                updateStateFromUI();
-                updatePreview();
-                saveStateLocally();
+                updateStateFromUI(); updatePreview(); saveStateLocally();
             });
         });
 
@@ -387,8 +403,7 @@
         function goToBotForImage() { saveStateLocally(); sendToBot('save'); }
 
         function renderGroups() {
-            let sel = document.getElementById("active_group_select");
-            sel.innerHTML = "";
+            let sel = document.getElementById("active_group_select"); sel.innerHTML = "";
             appState.groups.forEach((g, i) => {
                 let opt = document.createElement("option"); opt.value = i; opt.innerText = `Группа ${i+1} (${g.videos.length} видео)`;
                 if(i === appState.activeGroupIdx) opt.selected = true;
@@ -489,8 +504,8 @@
             if (appState.images.length === 0) {
                 imgSelect.innerHTML = "<option value=''>База пуста</option>";
             } else {
-                appState.images.forEach((imgName, index) => {
-                    let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgName;
+                appState.images.forEach((imgObj, index) => {
+                    let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name;
                     imgSelect.appendChild(opt);
                 });
                 if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) imgSelect.value = conf.img_idx;
@@ -545,20 +560,31 @@
             subsLayer.style.fontSize = (fSize / 6) + 'px';
 
             const bannerLayer = document.getElementById('p_banner_layer');
+            
             if (bType === 'text') {
-                const pText = document.getElementById('promo_text_content').value || "ТЕКСТ";
+                const pText = document.getElementById('promo_text_content').value || "ТЕКСТ БАННЕРА";
                 const pPosY = document.getElementById('promo_pos_y_slider').value;
                 const pSize = document.getElementById('promo_size_slider').value;
                 
-                bannerLayer.innerText = pText.replace(/\\n/g, '\n');
+                bannerLayer.innerHTML = pText.replace(/\\n/g, '<br>');
                 bannerLayer.style.fontSize = (pSize / 6) + 'px';
                 bannerLayer.style.top = pPosY + '%';
                 bannerLayer.style.left = '50%';
+                bannerLayer.style.width = '100%';
                 bannerLayer.style.transform = 'translate(-50%, -50%)';
                 bannerLayer.style.display = 'block';
+                
             } else if (bType === 'image') {
-                bannerLayer.innerText = "ИМИДЖ (ЛОГО)";
-                bannerLayer.style.fontSize = '12px';
+                let imgIdx = document.getElementById("img_selector").value;
+                if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) {
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block;">`;
+                } else {
+                    bannerLayer.innerHTML = "ИЗОБРАЖЕНИЕ";
+                    bannerLayer.style.fontSize = '12px';
+                }
+                
+                let scale = document.getElementById('img_scale_slider').value;
+                bannerLayer.style.width = scale + '%';
                 bannerLayer.style.top = document.getElementById('img_pos_y_slider').value + '%';
                 bannerLayer.style.left = document.getElementById('img_pos_x_slider').value + '%';
                 bannerLayer.style.transform = 'translate(-50%, -50%)';
@@ -580,8 +606,8 @@
         }
         function resetIndiv(idx) { appState.groups[appState.activeGroupIdx].videos[idx].settings = {}; saveStateLocally(); renderIndiv(); }
 
-        // --- PROMPTS & TEMPLATES ...
-        function renderPrompts() { /* ... Оставляю без изменений, как в прошлой версии ... */
+        // --- PROMPTS & TEMPLATES ---
+        function renderPrompts() {
             document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
             let list = document.getElementById("prompts_list"); list.innerHTML = "";
             if (appState.prompts.length === 0) list.innerHTML = "<p style='color:#666;'>База пуста.</p>";
@@ -605,9 +631,21 @@
             if (action === 'render') {
                 let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста! Добавьте ссылки на видео перед рендером.");
+                
+                let payload = { action: action, state: appState };
+                tg.sendData(JSON.stringify(payload));
+                
+                // АВТОМАТИЧЕСКАЯ ОЧИСТКА ЛОКАЛЬНОЙ ОЧЕРЕДИ ПОСЛЕ ОТПРАВКИ НА РЕНДЕР
+                appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}];
+                appState.activeGroupIdx = 0;
+                appState.preview_img = "";
+                saveStateLocally();
+                tg.close();
+            } else {
+                let payload = { action: action, state: appState };
+                tg.sendData(JSON.stringify(payload));
+                tg.close();
             }
-            let payload = { action: action, state: appState };
-            tg.sendData(JSON.stringify(payload)); tg.close();
         }
 
         showView('view-home');
