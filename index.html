@@ -500,7 +500,33 @@
             if (idx !== "") {
                 appState.images.splice(idx, 1);
                 saveStateLocally(); 
-                openVisuals(editingTarget); // Бесшовное обновление интерфейса
+                
+                // Без отправки в бота обновляем UI, бот получит актуальный массив при следующем render или save
+                let imgSelect = document.getElementById("img_selector");
+                imgSelect.innerHTML = "<option value=''>База пуста</option>";
+                if (appState.images.length > 0) {
+                    imgSelect.innerHTML = "";
+                    appState.images.forEach((imgObj, index) => {
+                        let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name;
+                        imgSelect.appendChild(opt);
+                    });
+                }
+                
+                updateStateFromUI(); updatePreview();
+                tg.showAlert("Картинка удалена из базы!");
+            }
+        }
+
+        function refreshImageDropdown(conf) {
+            let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "";
+            if (appState.images.length === 0) {
+                imgSelect.innerHTML = "<option value=''>База пуста</option>";
+            } else {
+                appState.images.forEach((imgObj, index) => {
+                    let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name;
+                    imgSelect.appendChild(opt);
+                });
+                if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) imgSelect.value = conf.img_idx;
             }
         }
 
@@ -535,17 +561,7 @@
             document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
             document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
-            let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "";
-            if (appState.images.length === 0) {
-                imgSelect.innerHTML = "<option value=''>База пуста</option>";
-            } else {
-                appState.images.forEach((imgObj, index) => {
-                    let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name;
-                    imgSelect.appendChild(opt);
-                });
-                if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) imgSelect.value = conf.img_idx;
-            }
-
+            refreshImageDropdown(conf);
             refreshTextBannersDropdown();
             toggleBannerOptions();
             
@@ -615,7 +631,7 @@
                 if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) {
                     bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.4));">`;
                 } else {
-                    bannerLayer.innerHTML = "<div style='border:1px dashed #fff; padding:5px; background:rgba(0,0,0,0.6); color:#fff;'>КАРТИНКА БЕЗ ССЫЛКИ</div>";
+                    bannerLayer.innerHTML = "<div style='border:1px dashed #fff; padding:5px; background:rgba(0,0,0,0.6); color:#fff;'>КАРТИНКА БЕЗ ССЫЛКИ<br><small>Загрузите новую</small></div>";
                 }
                 
                 let scale = document.getElementById('img_scale_slider').value;
