@@ -115,7 +115,7 @@
         .list-item-actions { display: flex; gap: 5px; }
         .list-item button { padding: 6px 12px; font-size: 12px; margin: 0; width: auto; }
         
-        .hidden { display: none !important; }
+        .hidden { display: none; }
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-row input { flex-grow: 1; margin-bottom: 0; }
         .flex-row button { width: auto; margin-bottom: 0; white-space: nowrap; }
@@ -221,16 +221,14 @@
             <h3 style="text-align: center; margin-bottom: 20px;">Настройка кадра</h3>
             
             <div class="preview-container" id="video_preview_box">
-                <div class="preview-placeholder" id="p_placeholder">Ожидание<br>ссылки на видео</div>
+                <div class="preview-placeholder" id="p_placeholder">Ожидание<br>кадра из видео</div>
                 <div id="p_blur_layer" class="preview-blur"></div>
                 <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
                 <div id="p_banner_layer" class="preview-banner"></div>
             </div>
 
             <div class="form-group">
-                <div class="sync-row">
-                    <label style="margin:0;">Позиция блюра (Центр Y)</label>
-                </div>
+                <label>Позиция блюра (Центр Y)</label>
                 <input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1">
             </div>
             <div class="form-group">
@@ -247,7 +245,7 @@
             <h3>Баннер (Вотермарка)</h3>
             <div class="form-group">
                 <label>Тип баннера</label>
-                <select id="banner_type" class="auto-save-input">
+                <select id="banner_type" class="auto-save-input" onchange="toggleBannerOptions()">
                     <option value="none">❌ Без баннера</option>
                     <option value="text">📝 Текстовый</option>
                     <option value="image">🖼 Картинка (Из галереи)</option>
@@ -374,12 +372,11 @@
         };
         let editingTarget = 'global'; 
 
-        // Инициализация
         try {
             const localData = localStorage.getItem('contentHijackerState');
             if (localData) {
                 let parsed = JSON.parse(localData);
-                appState = { ...appState, ...parsed }; // Слияние, чтобы text_banners точно инициализировались
+                appState = { ...appState, ...parsed };
             }
             
             const urlParams = new URLSearchParams(window.location.search);
@@ -398,12 +395,22 @@
             localStorage.setItem('contentHijackerState', JSON.stringify(appState));
         }
 
+        function toggleBannerOptions() {
+            let type = document.getElementById("banner_type").value;
+            if (type === "text") {
+                document.getElementById("text_options").classList.remove("hidden");
+                document.getElementById("img_options").classList.add("hidden");
+            } else if (type === "image") {
+                document.getElementById("text_options").classList.add("hidden");
+                document.getElementById("img_options").classList.remove("hidden");
+            } else {
+                document.getElementById("text_options").classList.add("hidden");
+                document.getElementById("img_options").classList.add("hidden");
+            }
+        }
+
         document.querySelectorAll('.auto-save-input').forEach(input => {
             input.addEventListener('input', () => {
-                if(input.id === 'banner_type') {
-                    document.getElementById("text_options").style.display = (input.value === "text") ? "block" : "none";
-                    document.getElementById("img_options").style.display = (input.value === "image") ? "block" : "none";
-                }
                 updateStateFromUI();
                 updatePreview();
                 saveStateLocally();
@@ -432,7 +439,6 @@
             sendToBot('save');
         }
 
-        // --- GROUPS & QUEUE ---
         function renderGroups() {
             let sel = document.getElementById("active_group_select");
             sel.innerHTML = "";
@@ -477,7 +483,12 @@
             if(!url) return;
             appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
             document.getElementById("new_video_url").value = "";
-            saveStateLocally(); renderGroups();
+            saveStateLocally(); 
+            renderGroups();
+            
+            tg.showConfirm("Видео добавлено! Чтобы загрузить кадр для предпросмотра, нужно отправить ссылку боту. Сделать это сейчас?", function(confirm) {
+                if(confirm) sendToBot('save');
+            });
         }
 
         function deleteVideo(idx) {
@@ -499,7 +510,6 @@
             });
         }
 
-        // --- БАЗА ТЕКСТОВЫХ БАННЕРОВ ---
         function refreshTextBannersDropdown() {
             let sel = document.getElementById("saved_text_banners");
             sel.innerHTML = "<option value=''>-- Выберите из сохраненных --</option>";
@@ -529,7 +539,6 @@
             }
         }
 
-        // --- VISUAL SETTINGS ---
         function openVisuals(target) {
             editingTarget = target;
             let conf = {};
@@ -563,7 +572,6 @@
             document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
             document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
-            // Load images
             let imgSelect = document.getElementById("img_selector");
             imgSelect.innerHTML = "";
             if (appState.images.length === 0) {
@@ -577,13 +585,14 @@
             }
 
             refreshTextBannersDropdown();
-
-            document.getElementById("text_options").style.display = (conf.banner_type === "text") ? "block" : "none";
-            document.getElementById("img_options").style.display = (conf.banner_type === "image") ? "block" : "none";
+            toggleBannerOptions();
             
             if (appState.preview_img) {
                 document.getElementById('video_preview_box').style.backgroundImage = "url('" + appState.preview_img + "')";
                 document.getElementById('p_placeholder').style.display = 'none';
+            } else {
+                document.getElementById('video_preview_box').style.backgroundImage = "none";
+                document.getElementById('p_placeholder').style.display = 'block';
             }
 
             updatePreview();
@@ -656,7 +665,6 @@
             }
         }
 
-        // --- INDIVIDUAL ---
         function renderIndiv() {
             let list = document.getElementById("indiv_videos_list");
             list.innerHTML = "";
@@ -676,7 +684,6 @@
         }
         function resetIndiv(idx) { appState.groups[appState.activeGroupIdx].videos[idx].settings = {}; saveStateLocally(); renderIndiv(); }
 
-        // --- PROMPTS & TEMPLATES ---
         function renderPrompts() {
             document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
             let list = document.getElementById("prompts_list");
