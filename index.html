@@ -215,9 +215,7 @@
                         <label>Размер текста</label>
                         <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1">
                     </div>
-                    
                     <hr class="divider">
-                    
                     <div class="form-group">
                         <label>Выбрать из сохраненных текстов:</label>
                         <div class="flex-row">
@@ -247,14 +245,12 @@
                         <label>Размер картинки (%)</label>
                         <input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1">
                     </div>
-                    
                     <hr class="divider">
-                    
                     <div class="form-group">
                         <label>Выбрать картинку из галереи:</label>
                         <div class="flex-row">
                             <select id="img_selector" class="auto-save-input"></select>
-                            <button class="btn btn-danger" onclick="deleteImageBanner()" title="Удалить выбранную картинку">🗑</button>
+                            <button class="btn btn-danger" onclick="deleteImageBanner()" title="Удалить картинку">🗑</button>
                         </div>
                     </div>
                     <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 0; padding: 10px; font-size:14px;" onclick="goToBotForImage()">📸 Загрузить новую картинку в бота</button>
@@ -357,7 +353,7 @@
             const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                if(data.images) appState.images = data.images; 
+                if(data.images) appState.images = data.images;
                 if(data.prompts) appState.prompts = data.prompts;
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
@@ -493,24 +489,18 @@
         function deleteTextBanner() {
             let idx = document.getElementById("saved_text_banners").value;
             if (idx !== "") {
-                tg.showConfirm("Удалить этот текст из сохраненных?", function(c) {
-                    if (c) {
-                        appState.text_banners.splice(idx, 1);
-                        document.getElementById("promo_text_content").value = "";
-                        saveStateLocally(); refreshTextBannersDropdown(); updateStateFromUI(); updatePreview();
-                    }
-                });
+                appState.text_banners.splice(idx, 1);
+                document.getElementById("promo_text_content").value = "";
+                saveStateLocally(); refreshTextBannersDropdown(); updateStateFromUI(); updatePreview();
             }
         }
+        
         function deleteImageBanner() {
             let idx = document.getElementById("img_selector").value;
             if (idx !== "") {
-                tg.showConfirm("Удалить эту картинку из базы?", function(c) {
-                    if (c) {
-                        appState.images.splice(idx, 1);
-                        saveStateLocally(); sendToBot('save'); // Перезагружаем интерфейс и чистим базу в боте
-                    }
-                });
+                appState.images.splice(idx, 1);
+                saveStateLocally(); 
+                openVisuals(editingTarget); // Бесшовное обновление интерфейса
             }
         }
 
@@ -623,7 +613,7 @@
                 let imgIdx = document.getElementById("img_selector").value;
                 
                 if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) {
-                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));">`;
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.4));">`;
                 } else {
                     bannerLayer.innerHTML = "<div style='border:1px dashed #fff; padding:5px; background:rgba(0,0,0,0.6); color:#fff;'>КАРТИНКА БЕЗ ССЫЛКИ</div>";
                 }
