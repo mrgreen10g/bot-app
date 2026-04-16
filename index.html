@@ -50,7 +50,7 @@
         }
         input[type="range"] { width: 100%; margin-top: 5px; accent-color: var(--tg-theme-button-color, #2481cc); }
         
-        /* VISUAL EDITOR - СВЯЗКА ПРЕДПРОСМОТРА И ПОЛЗУНКОВ */
+        /* VISUAL EDITOR */
         .visual-editor-card {
             background: var(--tg-theme-bg-color, #fff); border-radius: 12px; padding: 15px;
             border: 1px solid var(--tg-theme-hint-color, #ccc); margin-bottom: 15px;
@@ -213,6 +213,7 @@
                         <label>Размер текста</label>
                         <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1">
                     </div>
+                    <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
                     <div class="form-group">
                         <label>Текст (можно писать в несколько строк)</label>
                         <div class="flex-row">
@@ -239,11 +240,12 @@
                         <label>Размер картинки (%)</label>
                         <input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1">
                     </div>
-                    <div class="form-group">
+                    <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
+                    <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 10px; padding: 8px; font-size:13px;" onclick="goToBotForImage()">📸 Загрузить новую картинку в бота</button>
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label>Выбрать из галереи:</label>
                         <select id="img_selector" class="auto-save-input"></select>
                     </div>
-                    <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 0; padding: 8px; font-size:13px;" onclick="goToBotForImage()">📸 Загрузить новую картинку в бота</button>
                 </div>
             </div>
         </div>
@@ -400,7 +402,7 @@
             tg.MainButton.hide();
         }
 
-        function goToBotForImage() { saveStateLocally(); sendToBot('save'); }
+        function goToBotForImage() { saveStateLocally(); sendToBot('upload_banner'); }
 
         function renderGroups() {
             let sel = document.getElementById("active_group_select"); sel.innerHTML = "";
@@ -428,14 +430,13 @@
             appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
             document.getElementById("new_video_url").value = "";
             saveStateLocally(); renderGroups();
-            tg.showConfirm("Ссылка добавлена! Чтобы сгенерировать кадр предпросмотра, нужно обновить соединение с ботом. Сделать это сейчас?", function(c) {
+            tg.showConfirm("Ссылка добавлена! Обновить соединение с ботом, чтобы получить кадр предпросмотра?", function(c) {
                 if(c) sendToBot('save');
             });
         }
         
         function deleteVideo(idx) { 
             appState.groups[appState.activeGroupIdx].videos.splice(idx, 1);
-            // Если мы удалили первое видео или очередь пуста — сбрасываем картинку предпросмотра
             if (idx === 0 || appState.groups[appState.activeGroupIdx].videos.length === 0) {
                 appState.preview_img = "";
                 document.getElementById('video_preview_box').style.backgroundImage = "none";
@@ -586,7 +587,6 @@
             } else if (bType === 'image') {
                 let imgIdx = document.getElementById("img_selector").value;
                 
-                // Проверка на то, есть ли вообще у этой картинки URL для предпросмотра
                 if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) {
                     bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block;">`;
                 } else {
@@ -644,13 +644,6 @@
                 
                 let payload = { action: action, state: appState };
                 tg.sendData(JSON.stringify(payload));
-                
-                // АВТОМАТИЧЕСКАЯ ОЧИСТКА ЛОКАЛЬНОЙ ОЧЕРЕДИ ПОСЛЕ ОТПРАВКИ НА РЕНДЕР
-                appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}];
-                appState.activeGroupIdx = 0;
-                appState.preview_img = "";
-                saveStateLocally();
-                tg.close();
             } else {
                 let payload = { action: action, state: appState };
                 tg.sendData(JSON.stringify(payload));
