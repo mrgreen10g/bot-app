@@ -206,8 +206,12 @@
 
                 <div id="text_options" class="hidden">
                     <div class="form-group">
-                        <label>Сохраненные тексты:</label>
-                        <select id="saved_text_banners" class="auto-save-input" onchange="loadSavedTextBanner()"></select>
+                        <label>Позиция текста (Ось Y)</label>
+                        <input type="range" id="promo_pos_y_slider" class="auto-save-input" min="0" max="100" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Размер текста</label>
+                        <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1">
                     </div>
                     <div class="form-group">
                         <label>Текст (можно писать в несколько строк)</label>
@@ -216,22 +220,13 @@
                             <button class="btn btn-success" onclick="saveTextBanner()">💾</button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Позиция текста (Ось Y)</label>
-                        <input type="range" id="promo_pos_y_slider" class="auto-save-input" min="0" max="100" step="1">
-                    </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Размер текста</label>
-                        <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1">
+                        <label>Выбрать из сохраненных текстов:</label>
+                        <select id="saved_text_banners" class="auto-save-input" onchange="loadSavedTextBanner()"></select>
                     </div>
                 </div>
 
                 <div id="img_options" class="hidden">
-                    <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 10px; padding: 8px; font-size:13px;" onclick="goToBotForImage()">📸 Загрузить новую картинку в бота</button>
-                    <div class="form-group">
-                        <label>Выбрать из галереи:</label>
-                        <select id="img_selector" class="auto-save-input"></select>
-                    </div>
                     <div class="form-group">
                         <label>Ось X (Слева-Направо %)</label>
                         <input type="range" id="img_pos_x_slider" class="auto-save-input" min="0" max="100" step="1">
@@ -240,10 +235,15 @@
                         <label>Ось Y (Сверху-Вниз %)</label>
                         <input type="range" id="img_pos_y_slider" class="auto-save-input" min="0" max="100" step="1">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group">
                         <label>Размер картинки (%)</label>
                         <input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1">
                     </div>
+                    <div class="form-group">
+                        <label>Выбрать из галереи:</label>
+                        <select id="img_selector" class="auto-save-input"></select>
+                    </div>
+                    <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 0; padding: 8px; font-size:13px;" onclick="goToBotForImage()">📸 Загрузить новую картинку в бота</button>
                 </div>
             </div>
         </div>
@@ -343,11 +343,11 @@
             const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                if(data.images) appState.images = data.images; // Теперь это массив объектов {name, url}
+                if(data.images) appState.images = data.images;
                 if(data.prompts) appState.prompts = data.prompts;
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
-                if(data.preview_img) appState.preview_img = data.preview_img;
+                if(data.preview_img !== undefined) appState.preview_img = data.preview_img;
             }
         } catch(e) { console.error("Parse error", e); }
 
@@ -428,12 +428,21 @@
             appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
             document.getElementById("new_video_url").value = "";
             saveStateLocally(); renderGroups();
-            
             tg.showConfirm("Ссылка добавлена! Чтобы сгенерировать кадр предпросмотра, нужно обновить соединение с ботом. Сделать это сейчас?", function(c) {
                 if(c) sendToBot('save');
             });
         }
-        function deleteVideo(idx) { appState.groups[appState.activeGroupIdx].videos.splice(idx, 1); saveStateLocally(); renderGroups(); }
+        
+        function deleteVideo(idx) { 
+            appState.groups[appState.activeGroupIdx].videos.splice(idx, 1);
+            // Если мы удалили первое видео или очередь пуста — сбрасываем картинку предпросмотра
+            if (idx === 0 || appState.groups[appState.activeGroupIdx].videos.length === 0) {
+                appState.preview_img = "";
+                document.getElementById('video_preview_box').style.backgroundImage = "none";
+                document.getElementById('p_placeholder').style.display = 'block';
+            }
+            saveStateLocally(); renderGroups(); 
+        }
 
         function renderVideosList() {
             let list = document.getElementById("videos_list"); list.innerHTML = "";
@@ -576,11 +585,12 @@
                 
             } else if (bType === 'image') {
                 let imgIdx = document.getElementById("img_selector").value;
+                
+                // Проверка на то, есть ли вообще у этой картинки URL для предпросмотра
                 if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) {
                     bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block;">`;
                 } else {
-                    bannerLayer.innerHTML = "ИЗОБРАЖЕНИЕ";
-                    bannerLayer.style.fontSize = '12px';
+                    bannerLayer.innerHTML = "<div style='border:1px dashed #fff; padding:5px; background:rgba(0,0,0,0.6); color:#fff;'>КАРТИНКА БЕЗ ССЫЛКИ<br><small style='font-weight:normal;'>Загрузите новую в бота</small></div>";
                 }
                 
                 let scale = document.getElementById('img_scale_slider').value;
