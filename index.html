@@ -84,24 +84,15 @@
             position: absolute; width: 100%; text-align: center;
             color: #FFD700; font-weight: 800; text-transform: uppercase;
             -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000;
-            z-index: 2; pointer-events: none;
+            z-index: 2; pointer-events: none; line-height: 1.1;
         }
         .preview-banner {
             position: absolute; width: 100%; text-align: center;
             color: #FFF; font-weight: 900; text-transform: uppercase;
             -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000;
-            z-index: 3; pointer-events: none;
+            z-index: 3; pointer-events: none; line-height: 1.1;
         }
 
-        /* NUM INPUTS */
-        .sync-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .num-input {
-            width: 60px; padding: 4px; text-align: right;
-            border: 1px solid var(--tg-theme-hint-color, #ccc); border-radius: 6px;
-            font-size: 14px; font-weight: bold; color: var(--tg-theme-button-color, #2481cc);
-            background: var(--tg-theme-bg-color, #fff); outline: none;
-        }
-        
         /* BUTTONS */
         .btn {
             background-color: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff);
@@ -128,6 +119,7 @@
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-row input { flex-grow: 1; margin-bottom: 0; }
         .flex-row button { width: auto; margin-bottom: 0; white-space: nowrap; }
+        .sync-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -170,7 +162,6 @@
             <span class="header-title">Очередь</span>
             <span class="header-spacer"></span>
         </div>
-        
         <div class="section">
             <h3>Активная группа</h3>
             <select id="active_group_select" onchange="changeActiveGroup()"></select>
@@ -180,7 +171,6 @@
             </div>
             <button class="btn btn-danger" style="margin-top:10px;" onclick="deleteGroup()">❌ Удалить группу</button>
         </div>
-
         <div class="section">
             <h3>Добавить видео</h3>
             <div class="flex-row">
@@ -188,7 +178,6 @@
                 <button class="btn" onclick="addVideo()">➕</button>
             </div>
         </div>
-
         <div class="section">
             <h3>Список видео в группе</h3>
             <div id="videos_list"></div>
@@ -200,18 +189,6 @@
             <span class="back-btn" id="settings_back_btn" onclick="showView('view-home')">🔙 Назад</span>
             <span class="header-title" id="settings_title">Визуал</span>
             <span class="header-spacer"></span>
-        </div>
-
-        <div class="section" style="background: none; padding: 0;">
-            <div class="preview-container" id="video_preview_box">
-                <div class="preview-placeholder" id="p_placeholder">Предпросмотр<br>кадра 9:16</div>
-                <div id="p_blur_layer" class="preview-blur"></div>
-                <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
-                <div id="p_banner_layer" class="preview-banner"></div>
-            </div>
-            <p style="text-align:center; font-size:12px; color:var(--tg-theme-hint-color); margin-top:-10px; margin-bottom: 15px;">
-                Все изменения сохраняются автоматически
-            </p>
         </div>
         
         <div class="section">
@@ -241,9 +218,19 @@
         </div>
 
         <div class="section">
-            <h3>Блюр и Субтитры</h3>
+            <h3 style="text-align: center; margin-bottom: 20px;">Настройка кадра</h3>
+            
+            <div class="preview-container" id="video_preview_box">
+                <div class="preview-placeholder" id="p_placeholder">Ожидание<br>ссылки на видео</div>
+                <div id="p_blur_layer" class="preview-blur"></div>
+                <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
+                <div id="p_banner_layer" class="preview-banner"></div>
+            </div>
+
             <div class="form-group">
-                <label>Высота блюра (Позиция Y)</label>
+                <div class="sync-row">
+                    <label style="margin:0;">Позиция блюра (Центр Y)</label>
+                </div>
                 <input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1">
             </div>
             <div class="form-group">
@@ -269,11 +256,18 @@
 
             <div id="text_options" class="hidden">
                 <div class="form-group">
-                    <label>Текст для видео</label>
-                    <input type="text" id="promo_text_content" class="auto-save-input" placeholder="Напиши текст баннера...">
+                    <label>Сохраненные тексты:</label>
+                    <select id="saved_text_banners" class="auto-save-input" onchange="loadSavedTextBanner()"></select>
                 </div>
                 <div class="form-group">
-                    <label>Позиция текста</label>
+                    <label>Текст баннера</label>
+                    <div class="flex-row">
+                        <input type="text" id="promo_text_content" class="auto-save-input" placeholder="Напиши текст...">
+                        <button class="btn btn-success" onclick="saveTextBanner()">💾</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Позиция текста по вертикали</label>
                     <select id="promo_zone" class="auto-save-input">
                         <option value="pz_10">⬆️ Верх</option>
                         <option value="pz_50">↔️ Центр</option>
@@ -281,40 +275,28 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <div class="sync-row">
-                        <label style="margin:0;">Размер текста</label>
-                        <input type="number" id="promo_size_num" class="num-input auto-save-input" min="10" max="150" oninput="document.getElementById('promo_size_slider').value = this.value">
-                    </div>
-                    <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1" oninput="document.getElementById('promo_size_num').value = this.value">
+                    <label>Размер текста</label>
+                    <input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1">
                 </div>
             </div>
 
             <div id="img_options" class="hidden">
-                <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 15px;" onclick="goToBotForImage()">📸 Добавить новый баннер в чат</button>
+                <button class="btn" style="background-color: var(--tg-theme-button-color); margin-bottom: 15px;" onclick="goToBotForImage()">📸 Загрузить баннер в чате</button>
                 <div class="form-group">
-                    <label>Выбрать логотип из базы:</label>
+                    <label>Выбрать картинку из галереи:</label>
                     <select id="img_selector" class="auto-save-input"></select>
                 </div>
                 <div class="form-group">
-                    <div class="sync-row">
-                        <label style="margin:0;">Ось X (Слева-Направо %)</label>
-                        <input type="number" id="img_pos_x_num" class="num-input auto-save-input" min="0" max="100" oninput="document.getElementById('img_pos_x_slider').value = this.value">
-                    </div>
-                    <input type="range" id="img_pos_x_slider" class="auto-save-input" min="0" max="100" step="1" oninput="document.getElementById('img_pos_x_num').value = this.value">
+                    <label>Ось X (Слева-Направо %)</label>
+                    <input type="range" id="img_pos_x_slider" class="auto-save-input" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
-                    <div class="sync-row">
-                        <label style="margin:0;">Ось Y (Сверху-Вниз %)</label>
-                        <input type="number" id="img_pos_y_num" class="num-input auto-save-input" min="0" max="100" oninput="document.getElementById('img_pos_y_slider').value = this.value">
-                    </div>
-                    <input type="range" id="img_pos_y_slider" class="auto-save-input" min="0" max="100" step="1" oninput="document.getElementById('img_pos_y_num').value = this.value">
+                    <label>Ось Y (Сверху-Вниз %)</label>
+                    <input type="range" id="img_pos_y_slider" class="auto-save-input" min="0" max="100" step="1">
                 </div>
                 <div class="form-group">
-                    <div class="sync-row">
-                        <label style="margin:0;">Размер картинки (%)</label>
-                        <input type="number" id="img_scale_num" class="num-input auto-save-input" min="5" max="100" oninput="document.getElementById('img_scale_slider').value = this.value">
-                    </div>
-                    <input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1" oninput="document.getElementById('img_scale_num').value = this.value">
+                    <label>Размер картинки (%)</label>
+                    <input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1">
                 </div>
             </div>
         </div>
@@ -364,7 +346,6 @@
         </div>
         <div class="section">
             <h3>Сохранить текущие настройки</h3>
-            <p style="font-size: 13px; color: var(--tg-theme-hint-color);">Сохранит все визуальные настройки активной группы.</p>
             <div class="flex-row">
                 <input type="text" id="new_tpl_name" placeholder="Мой крутой шаблон 1...">
                 <button class="btn btn-success" onclick="saveTemplate()">💾</button>
@@ -389,35 +370,34 @@
 
         let appState = {
             groups: [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}],
-            activeGroupIdx: 0, prompts: [], templates: {}, images: [], preview_img: ""
+            activeGroupIdx: 0, prompts: [], templates: {}, images: [], text_banners: [], preview_img: ""
         };
         let editingTarget = 'global'; 
 
-        // Инициализация (сначала LocalStorage, затем URL Data если есть новые файлы)
+        // Инициализация
         try {
             const localData = localStorage.getItem('contentHijackerState');
             if (localData) {
-                appState = JSON.parse(localData);
+                let parsed = JSON.parse(localData);
+                appState = { ...appState, ...parsed }; // Слияние, чтобы text_banners точно инициализировались
             }
             
             const urlParams = new URLSearchParams(window.location.search);
             const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                // Перезаписываем только если бот прислал новые базы (картинки, шаблоны)
                 if(data.images) appState.images = data.images;
                 if(data.prompts) appState.prompts = data.prompts;
                 if(data.templates) appState.templates = data.templates;
+                if(data.text_banners) appState.text_banners = data.text_banners;
                 if(data.preview_img) appState.preview_img = data.preview_img;
             }
         } catch(e) { console.error("Parse error", e); }
 
-        // Универсальная функция автосохранения
         function saveStateLocally() {
             localStorage.setItem('contentHijackerState', JSON.stringify(appState));
         }
 
-        // Биндим все инпуты на автосохранение и обновление UI
         document.querySelectorAll('.auto-save-input').forEach(input => {
             input.addEventListener('input', () => {
                 if(input.id === 'banner_type') {
@@ -444,12 +424,12 @@
         function renderHome() {
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
             document.getElementById('home_videos_count').innerText = appState.groups[appState.activeGroupIdx].videos.length;
-            tg.MainButton.hide(); // Убрали кнопку, всё сохраняется само
+            tg.MainButton.hide();
         }
 
         function goToBotForImage() {
             saveStateLocally();
-            sendToBot('save'); // Закрывает прилу и сохраняет бэкап на сервере
+            sendToBot('save');
         }
 
         // --- GROUPS & QUEUE ---
@@ -467,8 +447,7 @@
 
         function changeActiveGroup() {
             appState.activeGroupIdx = parseInt(document.getElementById("active_group_select").value);
-            saveStateLocally();
-            renderGroups();
+            saveStateLocally(); renderGroups();
         }
 
         function addNewGroup() {
@@ -510,21 +489,47 @@
             let list = document.getElementById("videos_list");
             list.innerHTML = "";
             let vids = appState.groups[appState.activeGroupIdx].videos;
-            if(vids.length === 0) {
-                list.innerHTML = "<p style='color: var(--tg-theme-hint-color); text-align: center; margin-top: 20px;'>Очередь пуста.<br>Вставьте ссылку выше.</p>";
-            }
+            if(vids.length === 0) list.innerHTML = "<p style='color: var(--tg-theme-hint-color); text-align: center; margin-top: 20px;'>Очередь пуста.<br>Вставьте ссылку выше.</p>";
             vids.forEach((v, i) => {
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 list.innerHTML += `<div class="list-item">
                     <span class="title">🎬 ${displayUrl}</span>
-                    <div class="list-item-actions">
-                        <button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>
-                    </div>
+                    <div class="list-item-actions"><button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button></div>
                 </div>`;
             });
         }
 
-        // --- VISUAL SETTINGS (WYSIWYG) ---
+        // --- БАЗА ТЕКСТОВЫХ БАННЕРОВ ---
+        function refreshTextBannersDropdown() {
+            let sel = document.getElementById("saved_text_banners");
+            sel.innerHTML = "<option value=''>-- Выберите из сохраненных --</option>";
+            if (!appState.text_banners) appState.text_banners = [];
+            appState.text_banners.forEach((txt, idx) => {
+                let opt = document.createElement("option");
+                opt.value = idx; opt.innerText = txt.length > 30 ? txt.substring(0, 30) + '...' : txt;
+                sel.appendChild(opt);
+            });
+        }
+        function saveTextBanner() {
+            let txt = document.getElementById("promo_text_content").value.trim();
+            if (txt && !appState.text_banners.includes(txt)) {
+                appState.text_banners.push(txt);
+                saveStateLocally();
+                refreshTextBannersDropdown();
+                tg.showAlert("Текст успешно сохранен в базу!");
+            }
+        }
+        function loadSavedTextBanner() {
+            let idx = document.getElementById("saved_text_banners").value;
+            if (idx !== "") {
+                document.getElementById("promo_text_content").value = appState.text_banners[idx];
+                updateStateFromUI();
+                updatePreview();
+                saveStateLocally();
+            }
+        }
+
+        // --- VISUAL SETTINGS ---
         function openVisuals(target) {
             editingTarget = target;
             let conf = {};
@@ -541,7 +546,6 @@
                 conf = Object.assign({}, globalConf, indivConf);
             }
 
-            // Заполняем инпуты
             document.getElementById("theme").value = conf.theme || "general";
             document.getElementById("voice").value = conf.voice || "male";
             document.getElementById("music").value = conf.music || "none";
@@ -553,24 +557,17 @@
             document.getElementById("banner_type").value = conf.banner_type || "none";
             document.getElementById("promo_text_content").value = conf.promo_text_content || "";
             document.getElementById("promo_zone").value = conf.promo_zone || "pz_85";
-            
-            let pSize = conf.promo_size !== undefined ? conf.promo_size : 55;
-            document.getElementById("promo_size_slider").value = pSize;
-            document.getElementById("promo_size_num").value = pSize;
+            document.getElementById("promo_size_slider").value = conf.promo_size !== undefined ? conf.promo_size : 55;
 
-            let imgX = conf.img_pos_x !== undefined ? conf.img_pos_x : 50;
-            let imgY = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
-            let imgS = conf.img_scale !== undefined ? conf.img_scale : 25;
-            
-            document.getElementById("img_pos_x_slider").value = imgX; document.getElementById("img_pos_x_num").value = imgX;
-            document.getElementById("img_pos_y_slider").value = imgY; document.getElementById("img_pos_y_num").value = imgY;
-            document.getElementById("img_scale_slider").value = imgS; document.getElementById("img_scale_num").value = imgS;
+            document.getElementById("img_pos_x_slider").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50;
+            document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
+            document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
-            // Подгрузка картинок
+            // Load images
             let imgSelect = document.getElementById("img_selector");
             imgSelect.innerHTML = "";
             if (appState.images.length === 0) {
-                imgSelect.innerHTML = "<option value=''>Сначала загрузите картинку боту</option>";
+                imgSelect.innerHTML = "<option value=''>База пуста</option>";
             } else {
                 appState.images.forEach((imgName, index) => {
                     let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgName;
@@ -579,10 +576,11 @@
                 if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) imgSelect.value = conf.img_idx;
             }
 
+            refreshTextBannersDropdown();
+
             document.getElementById("text_options").style.display = (conf.banner_type === "text") ? "block" : "none";
             document.getElementById("img_options").style.display = (conf.banner_type === "image") ? "block" : "none";
             
-            // Настройка фона превью
             if (appState.preview_img) {
                 document.getElementById('video_preview_box').style.backgroundImage = "url('" + appState.preview_img + "')";
                 document.getElementById('p_placeholder').style.display = 'none';
@@ -592,11 +590,9 @@
             showView('view-settings');
         }
 
-        // Вызывается при любом изменении контролов
         function updateStateFromUI() {
             let conf = {
-                theme: document.getElementById("theme").value,
-                voice: document.getElementById("voice").value,
+                theme: document.getElementById("theme").value, voice: document.getElementById("voice").value,
                 music: document.getElementById("music").value,
                 blur_zone: parseInt(document.getElementById("blur_zone_slider").value) / 100.0,
                 blur_width: parseInt(document.getElementById("blur_width_slider").value),
@@ -611,33 +607,26 @@
                 img_scale: parseInt(document.getElementById("img_scale_slider").value)
             };
 
-            if(editingTarget === 'global') {
-                appState.groups[appState.activeGroupIdx].config = conf;
-            } else {
-                appState.groups[appState.activeGroupIdx].videos[editingTarget].settings = conf;
-            }
+            if(editingTarget === 'global') appState.groups[appState.activeGroupIdx].config = conf;
+            else appState.groups[appState.activeGroupIdx].videos[editingTarget].settings = conf;
         }
 
-        // Отрисовка WYSIWYG
         function updatePreview() {
             const bZone = document.getElementById('blur_zone_slider').value;   
             const bWidth = document.getElementById('blur_width_slider').value; 
             const fSize = document.getElementById('font_size_slider').value;
             const bType = document.getElementById('banner_type').value;
             
-            // Блюр
             const blurLayer = document.getElementById('p_blur_layer');
             const startY = bZone - (bWidth / 2);
             blurLayer.style.height = bWidth + '%';
             blurLayer.style.top = startY + '%';
 
-            // Субтитры
             const subsLayer = document.getElementById('p_subs_layer');
             subsLayer.style.top = bZone + '%';
             subsLayer.style.transform = 'translateY(-50%)';
-            subsLayer.style.fontSize = (fSize / 6) + 'px'; // Адаптация под 320px высоты превью
+            subsLayer.style.fontSize = (fSize / 6) + 'px';
 
-            // Баннер
             const bannerLayer = document.getElementById('p_banner_layer');
             if (bType === 'text') {
                 const pText = document.getElementById('promo_text_content').value;
@@ -652,10 +641,11 @@
                 if(pZone === 'pz_50') yPos = 50;
                 
                 bannerLayer.style.top = yPos + '%';
-                bannerLayer.style.transform = 'translateY(-50%)';
+                bannerLayer.style.left = '50%';
+                bannerLayer.style.transform = 'translate(-50%, -50%)';
                 bannerLayer.style.display = 'block';
             } else if (bType === 'image') {
-                bannerLayer.innerText = "ИМИЖ (ЛОГОТИП)";
+                bannerLayer.innerText = "ИМИДЖ (ЛОГОТИП)";
                 bannerLayer.style.fontSize = '12px';
                 bannerLayer.style.top = document.getElementById('img_pos_y_slider').value + '%';
                 bannerLayer.style.left = document.getElementById('img_pos_x_slider').value + '%';
@@ -672,7 +662,6 @@
             list.innerHTML = "";
             let vids = appState.groups[appState.activeGroupIdx].videos;
             if(vids.length === 0) list.innerHTML = "<p style='color: var(--tg-theme-hint-color); text-align: center;'>Очередь пуста.</p>";
-            
             vids.forEach((v, i) => {
                 let hasSettings = Object.keys(v.settings).length > 0;
                 let mark = hasSettings ? "⚠️ Свои настройки" : "Как у группы";
@@ -685,11 +674,7 @@
                 </div>`;
             });
         }
-
-        function resetIndiv(idx) {
-            appState.groups[appState.activeGroupIdx].videos[idx].settings = {};
-            saveStateLocally(); renderIndiv();
-        }
+        function resetIndiv(idx) { appState.groups[appState.activeGroupIdx].videos[idx].settings = {}; saveStateLocally(); renderIndiv(); }
 
         // --- PROMPTS & TEMPLATES ---
         function renderPrompts() {
@@ -707,15 +692,8 @@
                 </div>`;
             });
         }
-        function addPrompt() {
-            let t = document.getElementById("new_prompt_text").value.trim();
-            if(t) { appState.prompts.push(t); document.getElementById("new_prompt_text").value = ""; saveStateLocally(); renderPrompts(); }
-        }
-        function selPrompt(idx) { 
-            document.getElementById("active_prompt").value = appState.prompts[idx];
-            appState.groups[appState.activeGroupIdx].config.prompt_text_content = appState.prompts[idx];
-            saveStateLocally();
-        }
+        function addPrompt() { let t = document.getElementById("new_prompt_text").value.trim(); if(t) { appState.prompts.push(t); document.getElementById("new_prompt_text").value = ""; saveStateLocally(); renderPrompts(); } }
+        function selPrompt(idx) { document.getElementById("active_prompt").value = appState.prompts[idx]; appState.groups[appState.activeGroupIdx].config.prompt_text_content = appState.prompts[idx]; saveStateLocally(); }
         function delPrompt(idx) { appState.prompts.splice(idx, 1); saveStateLocally(); renderPrompts(); }
 
         function renderTemplates() {
@@ -733,33 +711,15 @@
                 </div>`;
             }
         }
-        function saveTemplate() {
-            let name = document.getElementById("new_tpl_name").value.trim();
-            if(name) {
-                appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config);
-                document.getElementById("new_tpl_name").value = ""; 
-                saveStateLocally(); renderTemplates();
-                tg.showAlert(`Шаблон '${name}' сохранен!`);
-            }
-        }
-        function applyTemplate(name) {
-            appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]);
-            saveStateLocally();
-            tg.showAlert(`Шаблон '${name}' применен!`);
-            showView('view-home');
-        }
+        function saveTemplate() { let name = document.getElementById("new_tpl_name").value.trim(); if(name) { appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config); document.getElementById("new_tpl_name").value = ""; saveStateLocally(); renderTemplates(); tg.showAlert(`Шаблон '${name}' сохранен!`); } }
+        function applyTemplate(name) { appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]); saveStateLocally(); tg.showAlert(`Шаблон '${name}' применен!`); showView('view-home'); }
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
-        // --- BOT COMMUNICATION ---
         function sendToBot(action) {
             if (action === 'render') {
                 let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
-                if (totalVids === 0) {
-                    tg.showAlert("Очередь пуста! Добавьте ссылки на видео перед рендером.");
-                    return;
-                }
+                if (totalVids === 0) return tg.showAlert("Очередь пуста! Добавьте ссылки на видео перед рендером.");
             }
-            // Отправляем финальный стейт боту и закрываем
             let payload = { action: action, state: appState };
             tg.sendData(JSON.stringify(payload));
             tg.close();
