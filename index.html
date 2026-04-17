@@ -140,12 +140,11 @@
         <div class="home-grid">
             <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь (URL)</span></div>
             <div class="app-icon" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Глобал Визуал</span></div>
-            <div class="app-icon" onclick="showView('view-individual')"><span class="emoji">🎯</span><span class="label">Точечная Цель</span></div>
             <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты AI</span></div>
             <div class="app-icon" onclick="showView('view-templates')"><span class="emoji">💾</span><span class="label">БД Шаблонов</span></div>
-            <div class="app-icon" style="background: rgba(255,0,85,0.1); border-color: var(--accent-danger);" onclick="sendToBot('render')">
-                <span class="emoji" style="filter: grayscale(100%) sepia(100%) hue-rotate(320deg) drop-shadow(0 0 5px var(--accent-danger));">⚡</span>
-                <span class="label" style="color: var(--accent-danger);">ЗАПУСК РЕНДЕРА</span>
+            <div class="app-icon" style="background: rgba(255,0,85,0.1); border-color: var(--accent-danger); grid-column: span 2;" onclick="sendToBot('render')">
+                <span class="emoji" style="filter: grayscale(100%) sepia(100%) hue-rotate(320deg) drop-shadow(0 0 5px var(--accent-danger)); display: inline-block; margin-bottom: 0; margin-right: 10px;">⚡</span>
+                <span class="label" style="color: var(--accent-danger); display: inline-block;">ЗАПУСК РЕНДЕРА</span>
             </div>
         </div>
     </div>
@@ -329,15 +328,6 @@
         </div>
     </div>
 
-    <div id="view-individual" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">Target Config</span><span class="header-spacer"></span></div>
-        <div class="section">
-            <h3>Цели в сессии</h3>
-            <p style="font-size: 11px; color: var(--text-muted);">Переопределение глобальных настроек для конкретного URL.</p>
-            <div id="indiv_videos_list"></div>
-        </div>
-    </div>
-
     <div id="view-prompts" class="view">
         <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">AI Prompts</span><span class="header-spacer"></span></div>
         <div class="section">
@@ -454,7 +444,6 @@
             document.getElementById(viewId).classList.add('active'); window.scrollTo(0, 0); 
             if(viewId === 'view-home') renderHome();
             if(viewId === 'view-groups') renderGroups();
-            if(viewId === 'view-individual') renderIndiv();
             if(viewId === 'view-prompts') renderPrompts();
             if(viewId === 'view-templates') renderTemplates();
         }
@@ -532,7 +521,6 @@
             if (appState.groups[appState.activeGroupIdx].videos.length === 0) appState.preview_img = ""; 
             saveStateLocally(); 
             if(document.getElementById('view-groups').classList.contains('active')) renderGroups();
-            if(document.getElementById('view-individual').classList.contains('active')) renderIndiv();
         }
 
         function renderVideosList(containerId) {
@@ -542,9 +530,7 @@
             vids.forEach((v, i) => {
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 let hasSettings = Object.keys(v.settings).length > 0;
-                let actionsHTML = (containerId === 'videos_list') ? 
-                    `<button class="btn btn-primary" onclick="loadPreviewForVideo('${v.source}')" title="Предпросмотр">👁</button><button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>` : 
-                    `${hasSettings ? `<button class="btn btn-secondary" onclick="resetIndiv(${i})">Сброс</button>` : ''}<button class="btn btn-primary" onclick="openVisuals(${i})">Config</button>`;
+                let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${i})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>`;
                 list.innerHTML += `<div class="list-item"><span class="title"> ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-cyan)' : 'var(--text-muted)'};">${hasSettings ? '> custom_cfg' : '> global_cfg'}</small></span><div class="list-item-actions">${actionsHTML}</div></div>`;
             });
         }
@@ -580,7 +566,7 @@
                 document.getElementById('settings_title').innerText = "Global Cfg"; document.getElementById('settings_back_btn').onclick = () => showView('view-home');
                 conf = appState.groups[appState.activeGroupIdx].config;
             } else {
-                document.getElementById('settings_title').innerText = `Target [${target}]`; document.getElementById('settings_back_btn').onclick = () => showView('view-individual');
+                document.getElementById('settings_title').innerText = `Target [${target}]`; document.getElementById('settings_back_btn').onclick = () => showView('view-groups');
                 conf = Object.assign({}, appState.groups[appState.activeGroupIdx].config, appState.groups[appState.activeGroupIdx].videos[target].settings);
                 let vUrl = appState.groups[appState.activeGroupIdx].videos[target].source;
                 fetchPreviewLocal(vUrl).then(u => { if(u) { appState.preview_img = u; saveStateLocally(); updatePreviewBG(); } });
@@ -650,9 +636,6 @@
             } else { bannerLayer.style.display = 'none'; }
         }
 
-        function renderIndiv() { renderVideosList('indiv_videos_list'); }
-        function resetIndiv(idx) { appState.groups[appState.activeGroupIdx].videos[idx].settings = {}; saveStateLocally(); renderIndiv(); }
-
         function renderPrompts() {
             document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
             let list = document.getElementById("prompts_list"); list.innerHTML = "";
@@ -676,7 +659,10 @@
                 if (totalVids === 0) return tg.showAlert("NULL Payload. Add URLs first.");
                 let payload = { action: action, state: appState };
                 tg.sendData(JSON.stringify(payload));
-                appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}]; appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
+                // При отправке на рендер очищаем очередь, но сохраняем конфиг активной сессии
+                let savedConfig = Object.assign({}, appState.groups[appState.activeGroupIdx].config);
+                appState.groups = [{id: 1, videos: [], config: savedConfig}]; 
+                appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
                 tg.close();
             } else if (action === 'vacuum') {
                 let payload = { action: action, state: appState, extra: extraData };
