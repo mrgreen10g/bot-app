@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        /* ХАКЕРСКАЯ КИБЕР-ТЕМА */
         :root {
             --bg-main: #050505;
             --bg-card: rgba(10, 15, 20, 0.85);
@@ -111,7 +112,7 @@
         .list-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
         .list-item button { padding: 6px 10px; font-size: 12px; margin: 0; width: auto; border-radius: 2px; }
         
-        .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; font-family: 'Share Tech Mono', monospace;}
+        .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
         .stats-row span { background: rgba(0, 229, 255, 0.05); padding: 2px 5px; border-radius: 2px; border: 1px solid rgba(0, 229, 255, 0.2); }
         
         .hidden { display: none !important; }
@@ -421,7 +422,6 @@
             const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                
                 if(data.images) appState.images = data.images;
                 
                 if(data.new_urls && data.sync_id && data.sync_id.toString() !== localStorage.getItem('last_sync_id')) {
@@ -566,49 +566,25 @@
             return "";
         }
 
-        // ФУНКЦИЯ ЛОКАЛЬНОГО ИНЖЕКТА (Приложение не закрывается!)
-        async function addVideoLocal() {
-            let url = document.getElementById("new_video_url").value.trim(); if(!url) return;
+        // НОВАЯ ЛОГИКА ДОБАВЛЕНИЯ ОДИНОЧНОГО ВИДЕО БЕЗ ЗАКРЫТИЯ ПРИЛОЖЕНИЯ
+        function addVideoLocal() {
+            let url = document.getElementById("new_video_url").value.trim(); 
+            if(!url) return;
             
-            let btn = document.querySelector("#tab_single .btn-primary");
-            let originalText = btn.innerText;
-            btn.innerText = "⏳ Поиск...";
-            btn.disabled = true;
-
-            let views = 0;
-            let title = "Manual Inject URL";
-            
-            try {
-                if (url.includes("tiktok.com") || url.includes("douyin.com")) {
-                    let res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
-                    let json = await res.json();
-                    if (json.data) {
-                        views = json.data.play_count || 0;
-                        title = json.data.title ? json.data.title.substring(0, 45) : "TikTok Video";
-                    }
-                } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                    let res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-                    let json = await res.json();
-                    if (json.title) title = json.title.substring(0, 45);
-                }
-            } catch (e) { console.log("Fetch error", e); }
-
+            // Сразу добавляем видео с фейковыми данными, чтобы приложение не зависало
             appState.groups[appState.activeGroupIdx].videos.push({
                 id: Math.random().toString(36).substr(2, 8), 
                 source: url, 
-                title: title,
-                views: views,
+                title: "Manual Inject URL",
+                views: null, // Null означает, что плашку просмотров показывать не нужно
                 processed: false,
                 settings: {}
             });
 
             document.getElementById("new_video_url").value = "";
-            btn.innerText = originalText;
-            btn.disabled = false;
-
             saveStateLocally(); 
             renderGroups(); 
-            tg.showAlert("✅ Добавлено!");
+            tg.showAlert("✅ Ссылка добавлена в очередь!");
         }
         
         function deleteVideo(realIdx) { 
@@ -657,8 +633,13 @@
                 let realIdx = allVids.indexOf(v);
                 let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
                 
+                // Отображаем только название и опционально просмотры (если они есть)
                 let titleHtml = `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>`;
-                let statsHtml = `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span></div>`;
+                
+                // Плашка просмотров показывается ТОЛЬКО если views не null (т.е. видео из парсера)
+                let statsHtml = (v.views !== null && v.views !== undefined) 
+                    ? `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span></div>` 
+                    : '';
                 
                 list.innerHTML += `
                 <div class="list-item">
