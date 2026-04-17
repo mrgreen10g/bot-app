@@ -104,13 +104,14 @@
         .btn-primary { background-color: rgba(0,229,255,0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); }
         .btn-danger { background-color: rgba(255,0,85,0.1); border-color: var(--accent-danger); color: var(--accent-danger); }
         .btn-success { background-color: rgba(0,255,102,0.1); border-color: var(--accent-green); color: var(--accent-green); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .list-item { background: #000; padding: 12px; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-left: 3px solid var(--text-muted); }
         .list-item span.title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 65%; color: var(--text-main); }
         .list-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
         .list-item button { padding: 6px 10px; font-size: 12px; margin: 0; width: auto; border-radius: 2px; }
         
-        .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
+        .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; font-family: 'Share Tech Mono', monospace;}
         .stats-row span { background: rgba(0, 229, 255, 0.05); padding: 2px 5px; border-radius: 2px; border: 1px solid rgba(0, 229, 255, 0.2); }
         
         .hidden { display: none !important; }
@@ -128,7 +129,7 @@
         <div class="header"><span class="header-spacer"></span><span class="header-title">💻 Hijacker_v2</span><span class="header-spacer"></span></div>
         <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-green);">
             <p style="margin: 0; font-size: 13px; text-transform: uppercase;">СЕССИЯ ЗАХВАТА: <b id="home_active_group_label" style="color: var(--accent-green); font-size: 18px;">1</b></p>
-            <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Перехвачено целей: <b id="home_videos_count" style="color: var(--accent-cyan);">0</b></p>
+            <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Ожидает рендера: <b id="home_videos_count" style="color: var(--accent-cyan);">0</b></p>
         </div>
         <div class="home-grid">
             <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь (URL)</span></div>
@@ -167,7 +168,7 @@
             <div id="tab_single" class="tab-content active">
                 <div class="flex-row">
                     <input type="url" id="new_video_url" placeholder="URL (YouTube/TikTok)...">
-                    <button class="btn btn-primary" onclick="addVideo()">Inject</button>
+                    <button class="btn btn-primary" onclick="addVideoLocal()">Inject</button>
                 </div>
             </div>
 
@@ -425,7 +426,6 @@
                 
                 if(data.new_urls && data.sync_id && data.sync_id.toString() !== localStorage.getItem('last_sync_id')) {
                     data.new_urls.forEach(obj => {
-                        // Защита от дублей
                         let exists = appState.groups[appState.activeGroupIdx].videos.find(v => v.source === obj.u);
                         if (!exists) {
                             appState.groups[appState.activeGroupIdx].videos.push({
@@ -433,8 +433,6 @@
                                 source: obj.u, 
                                 title: obj.t,
                                 views: obj.v,
-                                likes: obj.l,
-                                comments: obj.c,
                                 processed: obj.p,
                                 settings: {}
                             });
@@ -469,7 +467,6 @@
             document.getElementById('btn_tab_single').classList.remove('active'); document.getElementById('btn_tab_mass').classList.remove('active');
             document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
             
-            // Если мы в Одиночном режиме - прячем вкладку Обработанные
             if (tabId === 'single') {
                 document.getElementById('btn_tab_q_done').style.display = 'none';
                 if (activePayloadTab === 'done') switchPayloadTab('active');
@@ -569,12 +566,49 @@
             return "";
         }
 
-        function addVideo() {
+        // ФУНКЦИЯ ЛОКАЛЬНОГО ИНЖЕКТА (Приложение не закрывается!)
+        async function addVideoLocal() {
             let url = document.getElementById("new_video_url").value.trim(); if(!url) return;
-            // Отправляем одиночный запрос боту для сбора метаданных!
-            sendToBot('inject_single', {url: url});
+            
+            let btn = document.querySelector("#tab_single .btn-primary");
+            let originalText = btn.innerText;
+            btn.innerText = "⏳ Поиск...";
+            btn.disabled = true;
+
+            let views = 0;
+            let title = "Manual Inject URL";
+            
+            try {
+                if (url.includes("tiktok.com") || url.includes("douyin.com")) {
+                    let res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+                    let json = await res.json();
+                    if (json.data) {
+                        views = json.data.play_count || 0;
+                        title = json.data.title ? json.data.title.substring(0, 45) : "TikTok Video";
+                    }
+                } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                    let res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+                    let json = await res.json();
+                    if (json.title) title = json.title.substring(0, 45);
+                }
+            } catch (e) { console.log("Fetch error", e); }
+
+            appState.groups[appState.activeGroupIdx].videos.push({
+                id: Math.random().toString(36).substr(2, 8), 
+                source: url, 
+                title: title,
+                views: views,
+                processed: false,
+                settings: {}
+            });
+
             document.getElementById("new_video_url").value = "";
-            saveStateLocally();
+            btn.innerText = originalText;
+            btn.disabled = false;
+
+            saveStateLocally(); 
+            renderGroups(); 
+            tg.showAlert("✅ Добавлено!");
         }
         
         function deleteVideo(realIdx) { 
@@ -621,13 +655,10 @@
 
             filteredVids.forEach((v) => {
                 let realIdx = allVids.indexOf(v);
-                let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
                 
-                let titleHtml = v.title ? `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>` : `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${displayUrl}</b>`;
-                
-                // Техническая информация удалена, выводим только красивую статистику
-                let statsHtml = `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span><span>👍 ${formatNum(v.likes)}</span><span>💬 ${formatNum(v.comments)}</span></div>`;
+                let titleHtml = `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>`;
+                let statsHtml = `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span></div>`;
                 
                 list.innerHTML += `
                 <div class="list-item">
@@ -775,14 +806,11 @@
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // РЕШЕНИЕ ПРОБЛЕМЫ ЗАВИСАНИЯ ВИДЕО: Мгновенно помечаем как "Обработанные"
-                appState.groups.forEach(g => {
-                    g.videos.forEach(v => { v.processed = true; });
-                });
+                // Рендер помечает видео обработанными и убирает из "Ожидают"
+                appState.groups.forEach(g => { g.videos.forEach(v => { v.processed = true; }); });
                 saveStateLocally();
                 tg.close();
-                
-            } else if (action === 'vacuum' || action === 'inject_single') {
+            } else if (action === 'vacuum') {
                 let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
