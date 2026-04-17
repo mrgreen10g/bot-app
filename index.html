@@ -8,15 +8,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-main: #050505; --bg-card: rgba(10, 15, 20, 0.85);
-            --accent-green: #00ff66; --accent-cyan: #00e5ff; --accent-danger: #ff0055;
-            --text-main: #e0e0e0; --text-muted: #6b7a8c; --border-color: #1a2530;
+            --bg-main: #050505;
+            --bg-card: rgba(10, 15, 20, 0.85);
+            --accent-green: #00ff66; 
+            --accent-cyan: #00e5ff;
+            --accent-danger: #ff0055;
+            --text-main: #e0e0e0;
+            --text-muted: #6b7a8c;
+            --border-color: #1a2530;
             --glitch-shadow: 2px 0px 5px rgba(0, 255, 102, 0.4);
         }
 
         body {
-            font-family: 'Share Tech Mono', monospace; background-color: var(--bg-main); color: var(--text-main);
-            margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-main); color: var(--text-main);
+            margin: 0; padding: 0; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
         }
 
         #matrixCanvas {
@@ -153,8 +161,10 @@
             </div>
 
             <div id="tab_mass" class="tab-content">
-                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; line-height: 1.2;">Парсинг ссылок с канала TikTok/Shorts.</p>
-                <div class="form-group"><input type="url" id="vacuum_url" placeholder="URL профиля..."></div>
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; line-height: 1.2;">Парсинг ссылок с канала TikTok или YT Shorts.</p>
+                <div class="form-group">
+                    <input type="url" id="vacuum_url" placeholder="URL профиля...">
+                </div>
                 <div class="form-group flex-row" style="justify-content: space-between;">
                     <label style="margin:0; color:var(--accent-cyan);">Фильтр загруженных</label>
                     <input type="checkbox" id="vacuum_skip_used" checked>
@@ -177,7 +187,7 @@
         
         <div class="visual-editor-card">
             <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-green); border: 1px dashed var(--accent-green); padding: 5px; border-radius: 4px; cursor: pointer;" onclick="togglePreview()">
-                [ RADAR_PREVIEW ] <span id="preview_toggle_icon" style="float: right;">▼</span>
+                [ RADAR_PREVIEW ] <span id="preview_toggle_icon" style="float: right; color: var(--accent-cyan);">▼</span>
             </h3>
             
             <div id="preview_wrapper" style="display: block;">
@@ -366,7 +376,6 @@
             const localData = localStorage.getItem('hijackerV2State');
             if (localData) appState = { ...appState, ...JSON.parse(localData) };
             
-            // СИНХРОНИЗАЦИЯ ПАМЯТИ: Сливаем данные бота и локальной памяти
             const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
@@ -375,13 +384,10 @@
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
                 
-                // Если бот прислал больше видео (после пылесоса), то доверяем боту
                 if(data.groups && data.groups.length > 0) {
                     let localTotal = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
                     let botTotal = data.groups.reduce((acc, g) => acc + g.videos.length, 0);
-                    if (botTotal > localTotal) {
-                        appState.groups = data.groups;
-                    }
+                    if (botTotal > localTotal) appState.groups = data.groups;
                 }
             }
         } catch(e) {}
@@ -401,7 +407,6 @@
             document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
         }
 
-        // СВОРАЧИВАНИЕ ПРЕДПРОСМОТРА
         function togglePreview() {
             let wrapper = document.getElementById('preview_wrapper');
             let icon = document.getElementById('preview_toggle_icon');
@@ -446,13 +451,6 @@
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
             document.getElementById('home_videos_count').innerText = appState.groups[appState.activeGroupIdx].videos.length;
             tg.MainButton.hide();
-            
-            // Восстанавливаем состояние UI при старте
-            if (appState.activeQueueTab) switchQueueTab(appState.activeQueueTab);
-            if (appState.previewExpanded === false) {
-                document.getElementById('preview_wrapper').style.display = 'none';
-                document.getElementById('preview_toggle_icon').innerText = '▶';
-            }
         }
 
         function goToBotForImage() { saveStateLocally(); sendToBot('upload_banner'); }
@@ -464,6 +462,7 @@
                 if(i === appState.activeGroupIdx) opt.selected = true; sel.appendChild(opt);
             });
             renderVideosList('videos_list');
+            if (appState.activeQueueTab) switchQueueTab(appState.activeQueueTab);
         }
 
         function changeActiveGroup() { appState.activeGroupIdx = parseInt(document.getElementById("active_group_select").value); saveStateLocally(); renderGroups(); }
@@ -500,7 +499,7 @@
         }
 
         function loadPreviewForVideo(url) {
-            if(!appState.previewExpanded) togglePreview(); // Разворачиваем, если было свернуто
+            if(!appState.previewExpanded) togglePreview(); 
             document.getElementById('video_preview_box').style.backgroundImage = "none";
             document.getElementById('p_placeholder').style.display = 'flex';
             document.getElementById('p_placeholder').innerHTML = "<div class='spinner'></div><span>Fetching...</span>";
@@ -680,7 +679,12 @@
             }
         }
 
-        showView('view-home'); // Init
+        // Init with memory check
+        showView('view-home');
+        if (!appState.previewExpanded) {
+            document.getElementById('preview_wrapper').style.display = 'none';
+            document.getElementById('preview_toggle_icon').innerText = '▶';
+        }
     </script>
 </body>
 </html>
