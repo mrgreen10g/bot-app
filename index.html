@@ -111,7 +111,6 @@
         .list-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
         .list-item button { padding: 6px 10px; font-size: 12px; margin: 0; width: auto; border-radius: 2px; }
         
-        /* СТИЛЬ ДЛЯ СТАТИСТИКИ */
         .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
         .stats-row span { background: rgba(0, 229, 255, 0.05); padding: 2px 5px; border-radius: 2px; border: 1px solid rgba(0, 229, 255, 0.2); }
         
@@ -217,13 +216,17 @@
         <div class="header"><span class="back-btn" id="settings_back_btn" onclick="showView('view-home')">◄ Root</span><span class="header-title" id="settings_title">Визуал</span><span class="header-spacer"></span></div>
         
         <div class="visual-editor-card">
-            <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-green); border: none;">[ RADAR_PREVIEW ]</h3>
+            <div style="cursor: pointer; text-align: center; margin-bottom: 15px; color: var(--accent-cyan); border: 1px dashed var(--accent-cyan); padding: 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-family: 'Rajdhani', sans-serif;" onclick="document.getElementById('radar_wrapper').classList.toggle('hidden')">
+                👁 Показать / Скрыть Радар
+            </div>
             
-            <div class="preview-container" id="video_preview_box">
-                <div class="preview-placeholder" id="p_placeholder"><span style="font-size:24px; margin-bottom:5px;">📡</span>NO SIGNAL</div>
-                <div id="p_blur_layer" class="preview-blur"></div>
-                <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
-                <div id="p_banner_layer" class="preview-banner"></div>
+            <div id="radar_wrapper" class="">
+                <div class="preview-container" id="video_preview_box">
+                    <div class="preview-placeholder" id="p_placeholder"><span style="font-size:24px; margin-bottom:5px;">📡</span>NO SIGNAL</div>
+                    <div id="p_blur_layer" class="preview-blur"></div>
+                    <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
+                    <div id="p_banner_layer" class="preview-banner"></div>
+                </div>
             </div>
 
             <div class="tabs">
@@ -374,7 +377,6 @@
     </div>
 
     <script>
-        // АНИМАЦИЯ МАТРИЦЫ
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -482,10 +484,14 @@
             let isAuto = document.getElementById("auto_blur_toggle").checked;
             document.getElementById("manual_blur_options").style.opacity = isAuto ? "0.3" : "1";
             document.getElementById("manual_blur_options").style.pointerEvents = isAuto ? "none" : "auto";
+            
+            // Если автоблюр включен, мы полностью скрываем размытие и субтитры на радаре (Требование №4)
             if(isAuto) {
-                document.getElementById('p_blur_layer').innerHTML = "<div style='font-size:10px; color:var(--accent-green); text-align:center; line-height:1.2; padding-top:20%; background: rgba(0,255,102,0.1); width:100%; height:100%;'>⚡<br>OCR_BLUR<br>ACTIVE</div>";
+                document.getElementById('p_blur_layer').style.display = 'none';
+                document.getElementById('p_subs_layer').style.display = 'none';
             } else {
-                document.getElementById('p_blur_layer').innerHTML = "";
+                document.getElementById('p_blur_layer').style.display = 'block';
+                document.getElementById('p_subs_layer').style.display = 'block';
             }
         }
 
@@ -502,7 +508,6 @@
 
         function renderHome() {
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
-            // Считаем только те видео, которые не в истории (не отработаны)
             let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
             document.getElementById('home_videos_count').innerText = activeCount;
             tg.MainButton.hide();
@@ -623,8 +628,7 @@
             }
 
             filteredVids.forEach((v) => {
-                let realIdx = allVids.indexOf(v); // НАХОДИМ РЕАЛЬНЫЙ ИНДЕКС В МАССИВЕ!
-                
+                let realIdx = allVids.indexOf(v);
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 let hasSettings = Object.keys(v.settings).length > 0;
                 let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
@@ -723,12 +727,13 @@
             const targetLang = document.getElementById('target_language').value;
             
             const blurLayer = document.getElementById('p_blur_layer');
+            const subsLayer = document.getElementById('p_subs_layer');
+            
             if(!isAutoBlur) {
                 const startY = bZone - (bWidth / 2);
                 blurLayer.style.height = bWidth + '%'; blurLayer.style.top = startY + '%';
             }
 
-            const subsLayer = document.getElementById('p_subs_layer');
             subsLayer.style.top = (isAutoBlur ? 80 : bZone) + '%'; subsLayer.style.transform = 'translateY(-50%)';
             subsLayer.style.fontSize = (fSize / 6) + 'px';
             subsLayer.innerText = subTranslations[targetLang] || "СУБТИТРЫ";
@@ -765,12 +770,9 @@
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
         function sendToBot(action, extraData = null) {
-            // ФИЛЬТРУЕМ ОТПРАВЛЯЕМЫЕ ДАННЫЕ. ОСТАВЛЯЕМ ТОЛЬКО НУЖНОЕ (АКТИВНЫЕ ВИДЕО).
-            // Это гарантирует, что мы никогда не упремся в лимиты Телеграма.
             let cleanGroups = appState.groups.map(g => ({
                 id: g.id,
                 config: g.config,
-                // Отправляем на рендер только НЕ обработанные видео
                 videos: g.videos.filter(v => !v.processed) 
             }));
 
@@ -783,8 +785,15 @@
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // При запуске рендера, видео остаются в памяти, мы их не удаляем,
-                // но бэкенд потом сам их добавит в history.json.
+                // РЕШЕНИЕ ПУНКТА 2 И 3:
+                // При запуске рендера мы локально помечаем все активные видео как "Обработанные".
+                // Они останутся в базе, но перенесутся во вкладку "Обработанные"!
+                appState.groups.forEach(g => {
+                    g.videos.forEach(v => {
+                        v.processed = true;
+                    });
+                });
+                saveStateLocally();
                 tg.close();
             } else if (action === 'vacuum') {
                 let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
