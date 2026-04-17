@@ -7,7 +7,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        /* ХАКЕРСКАЯ КИБЕР-ТЕМА */
         :root {
             --bg-main: #050505;
             --bg-card: rgba(10, 15, 20, 0.85);
@@ -179,7 +178,7 @@
                 
                 <div class="form-group flex-row" style="justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
                     <label style="margin:0; color:var(--accent-cyan);">Фильтр загруженных</label>
-                    <input type="checkbox" id="vacuum_skip_used" checked>
+                    <input type="checkbox" id="vacuum_skip_used">
                 </div>
                 
                 <div class="form-group flex-row" style="justify-content: space-between;">
@@ -198,7 +197,7 @@
         </div>
 
         <div class="section">
-            <div class="tabs" style="margin-bottom: 10px;">
+            <div class="tabs" style="margin-bottom: 10px;" id="payload_tabs_container">
                 <div class="tab-btn active" id="btn_tab_q_active" onclick="switchPayloadTab('active')">Ожидают</div>
                 <div class="tab-btn" id="btn_tab_q_done" onclick="switchPayloadTab('done')" style="color: var(--accent-warn);">Обработанные</div>
             </div>
@@ -426,16 +425,20 @@
                 
                 if(data.new_urls && data.sync_id && data.sync_id.toString() !== localStorage.getItem('last_sync_id')) {
                     data.new_urls.forEach(obj => {
-                        appState.groups[appState.activeGroupIdx].videos.push({
-                            id: Math.random().toString(36).substr(2, 8), 
-                            source: obj.u, 
-                            title: obj.t,
-                            views: obj.v,
-                            likes: obj.l,
-                            comments: obj.c,
-                            processed: obj.p,
-                            settings: {}
-                        });
+                        // Защита от дублей
+                        let exists = appState.groups[appState.activeGroupIdx].videos.find(v => v.source === obj.u);
+                        if (!exists) {
+                            appState.groups[appState.activeGroupIdx].videos.push({
+                                id: Math.random().toString(36).substr(2, 8), 
+                                source: obj.u, 
+                                title: obj.t,
+                                views: obj.v,
+                                likes: obj.l,
+                                comments: obj.c,
+                                processed: obj.p,
+                                settings: {}
+                            });
+                        }
                     });
                     localStorage.setItem('last_sync_id', data.sync_id.toString());
                     saveStateLocally();
@@ -465,6 +468,15 @@
             document.getElementById('tab_single').classList.remove('active'); document.getElementById('tab_mass').classList.remove('active');
             document.getElementById('btn_tab_single').classList.remove('active'); document.getElementById('btn_tab_mass').classList.remove('active');
             document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
+            
+            // Если мы в Одиночном режиме - прячем вкладку Обработанные
+            if (tabId === 'single') {
+                document.getElementById('btn_tab_q_done').style.display = 'none';
+                if (activePayloadTab === 'done') switchPayloadTab('active');
+            } else {
+                document.getElementById('btn_tab_q_done').style.display = 'block';
+            }
+            
             appState.lastQueueTab = tabId; saveStateLocally();
         }
 
@@ -485,7 +497,6 @@
             document.getElementById("manual_blur_options").style.opacity = isAuto ? "0.3" : "1";
             document.getElementById("manual_blur_options").style.pointerEvents = isAuto ? "none" : "auto";
             
-            // Если автоблюр включен, мы полностью скрываем размытие и субтитры на радаре (Требование №4)
             if(isAuto) {
                 document.getElementById('p_blur_layer').style.display = 'none';
                 document.getElementById('p_subs_layer').style.display = 'none';
@@ -521,8 +532,8 @@
                 let opt = document.createElement("option"); opt.value = i; opt.innerText = `Сессия ${i+1} (${g.videos.length} URL)`;
                 if(i === appState.activeGroupIdx) opt.selected = true; sel.appendChild(opt);
             });
-            renderVideosList('videos_list');
             switchQueueTab(appState.lastQueueTab);
+            renderVideosList('videos_list');
         }
 
         function changeActiveGroup() { appState.activeGroupIdx = parseInt(document.getElementById("active_group_select").value); saveStateLocally(); renderGroups(); }
@@ -542,9 +553,7 @@
             let sort_mode = document.getElementById("vacuum_sort_mode").value;
             
             if(!url) return tg.showAlert("Введите URL!");
-            tg.showConfirm(`Запустить парсер на ${count} целей? Бот уведомит по завершении.`, function(c) {
-                if(c) { sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip, sort_mode: sort_mode}); }
-            });
+            sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip, sort_mode: sort_mode});
         }
 
         async function fetchPreviewLocal(url) {
@@ -560,29 +569,12 @@
             return "";
         }
 
-        function loadPreviewForVideo(url) {
-            document.getElementById('video_preview_box').style.backgroundImage = "none";
-            document.getElementById('p_placeholder').style.display = 'flex';
-            document.getElementById('p_placeholder').innerHTML = "<div class='spinner'></div><span>Fetching...</span>";
-            openVisuals('global'); 
-            fetchPreviewLocal(url).then(previewUrl => {
-                if(previewUrl) { appState.preview_img = previewUrl; document.getElementById('video_preview_box').style.backgroundImage = `url('${previewUrl}')`; document.getElementById('p_placeholder').style.display = 'none'; } 
-                else { document.getElementById('p_placeholder').innerHTML = "<span style='color:var(--accent-danger)'>ERR_NO_DATA</span>"; }
-                saveStateLocally();
-            });
-        }
-
         function addVideo() {
             let url = document.getElementById("new_video_url").value.trim(); if(!url) return;
-            appState.groups[appState.activeGroupIdx].videos.push({
-                id: Math.random().toString(36).substr(2, 8), 
-                source: url, 
-                title: "Manual Inject URL",
-                views: 0, likes: 0, comments: 0,
-                processed: false,
-                settings: {}
-            });
-            document.getElementById("new_video_url").value = ""; saveStateLocally(); renderGroups(); tg.showAlert("URL injected!");
+            // Отправляем одиночный запрос боту для сбора метаданных!
+            sendToBot('inject_single', {url: url});
+            document.getElementById("new_video_url").value = "";
+            saveStateLocally();
         }
         
         function deleteVideo(realIdx) { 
@@ -623,27 +615,25 @@
             let filteredVids = allVids.filter(v => activePayloadTab === 'done' ? v.processed : !v.processed);
 
             if(filteredVids.length === 0) {
-                list.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>Список "${activePayloadTab === 'active' ? 'Ожидают' : 'Обработанные'}" пуст.</p>`;
+                list.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>Список пуст.</p>`;
                 return;
             }
 
             filteredVids.forEach((v) => {
                 let realIdx = allVids.indexOf(v);
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
-                let hasSettings = Object.keys(v.settings).length > 0;
                 let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
                 
-                let titleHtml = v.title ? `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>` : '';
-                let statsHtml = v.title ? `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span><span>👍 ${formatNum(v.likes)}</span><span>💬 ${formatNum(v.comments)}</span></div>` : '';
+                let titleHtml = v.title ? `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>` : `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${displayUrl}</b>`;
+                
+                // Техническая информация удалена, выводим только красивую статистику
+                let statsHtml = `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span><span>👍 ${formatNum(v.likes)}</span><span>💬 ${formatNum(v.comments)}</span></div>`;
                 
                 list.innerHTML += `
                 <div class="list-item">
                     <span class="title" style="white-space: normal;"> 
                         ${titleHtml}
                         ${statsHtml}
-                        <small style="color:${hasSettings ? 'var(--accent-cyan)' : 'var(--text-muted)'}; display:block; margin-top:2px;">
-                            ${hasSettings ? '> custom_cfg' : '> global_cfg'} | ${displayUrl}
-                        </small>
                     </span>
                     <div class="list-item-actions">${actionsHTML}</div>
                 </div>`;
@@ -785,17 +775,14 @@
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // РЕШЕНИЕ ПУНКТА 2 И 3:
-                // При запуске рендера мы локально помечаем все активные видео как "Обработанные".
-                // Они останутся в базе, но перенесутся во вкладку "Обработанные"!
+                // РЕШЕНИЕ ПРОБЛЕМЫ ЗАВИСАНИЯ ВИДЕО: Мгновенно помечаем как "Обработанные"
                 appState.groups.forEach(g => {
-                    g.videos.forEach(v => {
-                        v.processed = true;
-                    });
+                    g.videos.forEach(v => { v.processed = true; });
                 });
                 saveStateLocally();
                 tg.close();
-            } else if (action === 'vacuum') {
+                
+            } else if (action === 'vacuum' || action === 'inject_single') {
                 let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
