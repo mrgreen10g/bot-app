@@ -3,370 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ContentHijacker App</title>
+    <title>ContentHijacker Terminal</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        /* ХАКЕРСКАЯ КИБЕР-ТЕМА (Watch Dogs 2 / Matrix) */
         :root {
-            --bg-ship: url('https://i.ibb.co/3sZ8X9T/ship-bg.jpg');
-            --bg-map: url('https://i.ibb.co/L5Q1D0m/map-bg.jpg');   
-            --bg-cabin: url('https://i.ibb.co/9g5S88H/cabin-bg.jpg');
-            
-            --icon-queue: url('https://img.icons8.com/color/96/kraken.png');
-            --icon-visual: url('https://img.icons8.com/color/96/trident.png');
-            --icon-indiv: url('https://img.icons8.com/color/96/compass.png');
-            --icon-prompt: url('https://img.icons8.com/color/96/anchor.png');
-            --icon-tpl: url('https://img.icons8.com/color/96/scroll.png');
-            --icon-render: url('https://img.icons8.com/color/96/magic-crystal-ball.png');
-            --logo-main: url('https://img.icons8.com/color/96/pirate-flag.png');
-
-            --accent-main: #4facfe; 
-            --accent-gold: #ffcc00; 
-            --accent-danger: #ff4b4b;
-            --glass-bg: rgba(15, 20, 30, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-main: #050505;
+            --bg-card: rgba(10, 15, 20, 0.85);
+            --accent-green: #00ff66; 
+            --accent-cyan: #00e5ff;
+            --accent-danger: #ff0055;
+            --text-main: #e0e0e0;
+            --text-muted: #6b7a8c;
+            --border-color: #1a2530;
+            --glitch-shadow: 2px 0px 5px rgba(0, 255, 102, 0.4);
         }
 
         body {
-            font-family: 'Inter', sans-serif; color: #e0e0e0;
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-main); color: var(--text-main);
             margin: 0; padding: 0; user-select: none;
             -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden; background-color: #050b14;
+            overflow-x: hidden;
         }
-        h1, h2, h3, .header-title { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
 
-        .dynamic-bg {
-            position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
-            background-image: var(--bg-ship); background-size: cover; background-position: center;
-            z-index: -3; transition: background-image 0.5s ease-in-out;
-            animation: sway 6s ease-in-out infinite alternate;
+        /* АНИМАЦИЯ МАТРИЦЫ НА ФОНЕ */
+        #matrixCanvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; pointer-events: none; opacity: 0.35;
         }
-        @keyframes sway { 0% { transform: rotate(-1.5deg) translateY(0px); } 100% { transform: rotate(1.5deg) translateY(15px); } }
 
-        .weather-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -2;
-            background-image: repeating-linear-gradient(-15deg, transparent, transparent 15px, rgba(255,255,255,0.1) 15px, rgba(255,255,255,0.1) 16px);
-            background-size: 200px 1000px; animation: rainDrop 0.4s linear infinite;
-        }
-        @keyframes rainDrop { 0% { background-position: 0 0; } 100% { background-position: 20px 1000px; } }
+        h1, h2, h3, .header-title { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
 
-        .lightning-flash {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1;
-            background: #fff; opacity: 0; mix-blend-mode: overlay; animation: flash 9s infinite;
-        }
-        @keyframes flash { 0%, 93%, 96%, 100% { opacity: 0; } 94%, 98% { opacity: 0.4; } }
-
+        /* HEADER */
         .header {
-            padding: 15px; text-align: center; border-bottom: 1px solid var(--glass-border);
-            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 15px; text-align: center; border-bottom: 1px solid var(--accent-green);
+            background: rgba(5, 5, 5, 0.9); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
             position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 255, 102, 0.15);
         }
-        .header-title { font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .header-logo { width: 30px; height: 30px; background-image: var(--logo-main); background-size: contain; background-repeat: no-repeat;}
-        .back-btn { color: var(--accent-main); cursor: pointer; font-size: 14px; width: 60px; text-align: left; font-weight: 600; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+        .header-title { font-size: 20px; font-weight: 700; color: var(--accent-green); text-shadow: var(--glitch-shadow); }
+        .back-btn { color: var(--accent-cyan); cursor: pointer; font-size: 14px; width: 60px; text-align: left; font-weight: 600; text-transform: uppercase; }
         .header-spacer { width: 60px; }
         
+        /* VIEWS */
         .view { display: none; padding: 15px; padding-bottom: 80px; }
-        .view.active { display: block; animation: viewFade 0.3s ease-out; }
-        @keyframes viewFade { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .view.active { display: block; animation: cyberFade 0.3s ease-out; }
+        @keyframes cyberFade { from { opacity: 0; filter: contrast(2) saturate(200%); transform: translateY(5px); } to { opacity: 1; filter: none; transform: translateY(0); } }
         
+        /* HOME GRID */
         .home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .app-icon {
-            background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border); border-radius: 12px; padding: 25px 10px; 
-            text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 4px; padding: 20px 10px; text-align: center; 
+            cursor: pointer; transition: all 0.2s; position: relative;
         }
-        .app-icon:active { transform: scale(0.95); border-color: var(--accent-main); }
-        .app-icon .icon-img { width: 64px; height: 64px; margin: 0 auto 10px auto; background-size: contain; background-position: center; background-repeat: no-repeat; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .app-icon span.label { font-size: 13px; font-weight: 700; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; color: #fff; text-shadow: 0 1px 3px #000;}
+        .app-icon:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); transform: translateY(-2px); }
+        .app-icon:active { transform: scale(0.95); }
+        .app-icon span.emoji { font-size: 32px; display: block; margin-bottom: 10px; filter: grayscale(100%) sepia(100%) hue-rotate(90deg) drop-shadow(0 0 5px var(--accent-green)); }
+        .app-icon span.label { font-size: 12px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
         
-        .section { background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h3 { margin-top: 0; font-size: 18px; margin-bottom: 15px; color: var(--accent-gold); border-bottom: 1px dashed rgba(255,204,0,0.3); padding-bottom: 8px; text-shadow: 0 2px 4px #000;}
+        /* FORMS & LISTS */
+        .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; margin-bottom: 15px; border-left: 3px solid var(--accent-cyan); }
+        h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: var(--accent-green); border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
         .form-group { margin-bottom: 15px; }
         .form-group:last-child { margin-bottom: 0; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12px; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 2px #000;}
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
         
         select, input[type="text"], input[type="url"], input[type="number"] {
-            width: 100%; padding: 12px; box-sizing: border-box; background-color: rgba(0,0,0,0.5); 
-            color: #fff; border: 1px solid var(--glass-border); border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;
+            width: 100%; padding: 12px; box-sizing: border-box; background-color: #000; 
+            color: var(--accent-green); border: 1px solid var(--border-color); 
+            border-radius: 4px; font-size: 13px; outline: none; transition: border-color 0.2s;
+            font-family: 'Share Tech Mono', monospace;
         }
-        select:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus { border-color: var(--accent-main); box-shadow: 0 0 8px rgba(79,172,254,0.3); }
+        select:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0,229,255,0.2); }
         
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; outline: none; border: 1px solid var(--glass-border); margin-top: 8px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-main); cursor: pointer; box-shadow: 0 0 10px var(--accent-main); }
-        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent-gold); cursor: pointer;}
+        /* SLIDERS */
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 0; outline: none; margin-top: 8px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 20px; background: var(--accent-cyan); cursor: pointer; border-radius: 2px; }
+        input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-green); cursor: pointer; }
 
-        .visual-editor-card { background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
-        .preview-container { width: 160px; height: 284px; background-color: #000; background-size: cover; background-position: center; margin: 0 auto 15px auto; border-radius: 8px; position: relative; overflow: hidden; border: 2px solid var(--accent-main); box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        .preview-placeholder { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: #888; font-size: 12px; transform: translateY(-50%); z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .preview-blur { position: absolute; width: 100%; left: 0; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1; border-top: 1px solid rgba(79,172,254,0.3); border-bottom: 1px solid rgba(79,172,254,0.3); }
-        .preview-subs { position: absolute; width: 100%; text-align: center; color: var(--accent-gold); font-weight: 800; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 2; pointer-events: none; line-height: 1.1; font-family: 'Inter', sans-serif; }
-        .preview-banner { position: absolute; text-align: center; color: #FFF; font-weight: 900; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 3; pointer-events: none; line-height: 1.1; white-space: pre-wrap; font-family: 'Inter', sans-serif; }
+        /* VISUAL EDITOR */
+        .visual-editor-card { background: var(--bg-card); border-radius: 4px; padding: 15px; border: 1px solid var(--accent-cyan); margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,229,255,0.05); }
+        .preview-container { width: 160px; height: 284px; background-color: #000; background-size: cover; background-position: center; margin: 0 auto 15px auto; border-radius: 4px; position: relative; overflow: hidden; border: 1px solid var(--accent-green); box-shadow: 0 0 15px rgba(0,255,102,0.2); }
+        .preview-placeholder { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: var(--accent-cyan); font-size: 11px; transform: translateY(-50%); z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; }
+        .preview-blur { position: absolute; width: 100%; left: 0; background: rgba(0, 255, 102, 0.05); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1; border-top: 1px dashed var(--accent-green); border-bottom: 1px dashed var(--accent-green); }
+        .preview-subs { position: absolute; width: 100%; text-align: center; color: #fff; font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 2; pointer-events: none; line-height: 1.1; }
+        .preview-banner { position: absolute; text-align: center; color: #FFF; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 3; pointer-events: none; line-height: 1.1; white-space: pre-wrap; }
 
-        .spinner { width: 20px; height: 20px; border: 2px solid var(--glass-border); border-radius: 50%; border-top-color: var(--accent-main); animation: spin 1s linear infinite; margin-bottom: 8px; }
+        .spinner { width: 18px; height: 18px; border: 2px solid var(--border-color); border-radius: 50%; border-top-color: var(--accent-cyan); animation: spin 1s linear infinite; margin-bottom: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        .tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 4px; border: 1px solid var(--glass-border); }
-        .tab-btn { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: 0.2s; color: #888; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; }
-        .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); border: 1px solid var(--glass-border);}
+        /* TABS UI */
+        .tabs { display: flex; margin-bottom: 15px; background: #000; border-radius: 4px; padding: 2px; border: 1px solid var(--border-color); }
+        .tab-btn { flex: 1; padding: 8px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn.active { background: var(--border-color); color: var(--accent-green); border-bottom: 2px solid var(--accent-green); }
         .tab-content { display: none; padding: 5px 0; }
         .tab-content.active { display: block; animation: fadeIn 0.2s; }
 
+        /* BUTTONS */
         .btn {
-            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.2) 100%); color: #fff;
-            border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: bold;
-            cursor: pointer; width: 100%; margin-bottom: 10px; transition: all 0.2s; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
-            backdrop-filter: blur(5px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background-color: var(--border-color); color: var(--text-main);
+            border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 4px; font-size: 13px; font-weight: bold;
+            cursor: pointer; width: 100%; margin-bottom: 10px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            font-family: 'Share Tech Mono', monospace;
         }
-        .btn:active { transform: scale(0.98); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
-        .btn-primary { background: rgba(79,172,254,0.2); border-color: var(--accent-main); color: var(--accent-main); }
-        .btn-danger { background: rgba(255,75,75,0.2); border-color: var(--accent-danger); color: #ff8888; }
-        .btn-success { background: rgba(255,204,0,0.2); border-color: var(--accent-gold); color: var(--accent-gold); }
-        .btn-purple { background: rgba(153, 50, 204, 0.2); border-color: #9932cc; color: #d896ff; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: rgba(0,229,255,0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .btn-danger { background-color: rgba(255,0,85,0.1); border-color: var(--accent-danger); color: var(--accent-danger); }
+        .btn-success { background-color: rgba(0,255,102,0.1); border-color: var(--accent-green); color: var(--accent-green); }
         
-        .list-item { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); }
-        .list-item span.title { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; color: #fff; text-shadow: 0 1px 2px #000;}
+        /* LIST ITEMS */
+        .list-item { background: #000; padding: 12px; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-left: 3px solid var(--text-muted); }
+        .list-item span.title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; color: var(--text-main); }
         .list-item-actions { display: flex; gap: 5px; }
-        .list-item button { padding: 6px 10px; font-size: 14px; margin: 0; width: auto; border-radius: 6px; }
+        .list-item button { padding: 6px 10px; font-size: 12px; margin: 0; width: auto; border-radius: 2px; }
         
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 8px; align-items: center; }
         .flex-row input, .flex-row select { flex-grow: 1; margin-bottom: 0; }
         .flex-row button { width: auto; margin-bottom: 0; white-space: nowrap; }
-        hr.divider { border: 0; border-top: 1px dashed var(--glass-border); margin: 15px 0; }
+        hr.divider { border: 0; border-top: 1px dashed var(--border-color); margin: 15px 0; }
     </style>
 </head>
 <body>
 
-    <div class="dynamic-bg" id="main_bg"></div>
-    <div class="weather-overlay"></div>
-    <div class="lightning-flash"></div>
+    <canvas id="matrixCanvas"></canvas>
 
     <div id="view-home" class="view active">
-        <div class="header"><span class="header-spacer"></span><span class="header-title"><div class="header-logo"></div> ContentHijacker</span><span class="header-spacer"></span></div>
-        <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-main); box-shadow: inset 0 0 20px rgba(79,172,254,0.1);">
-            <p style="margin: 0; font-size: 15px; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; text-shadow: 0 2px 4px #000;">Активный Флот: <b id="home_active_group_label" style="color: var(--accent-gold); font-size: 20px;">1</b></p>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #ccc; text-shadow: 0 1px 2px #000;">Целей в очереди: <b id="home_videos_count" style="color: #fff;">0</b></p>
+        <div class="header"><span class="header-spacer"></span><span class="header-title">💻 Hijacker_v2</span><span class="header-spacer"></span></div>
+        <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-green);">
+            <p style="margin: 0; font-size: 13px; text-transform: uppercase;">СЕССИЯ ЗАХВАТА: <b id="home_active_group_label" style="color: var(--accent-green); font-size: 18px;">1</b></p>
+            <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Перехвачено целей: <b id="home_videos_count" style="color: var(--accent-cyan);">0</b></p>
         </div>
         <div class="home-grid">
-            <div class="app-icon" onclick="showView('view-groups')"><div class="icon-img" style="background-image: var(--icon-queue);"></div><span class="label">Очередь Видео</span></div>
-            <div class="app-icon" onclick="openVisuals('global')"><div class="icon-img" style="background-image: var(--icon-visual);"></div><span class="label">Визуал Группы</span></div>
-            <div class="app-icon" onclick="showView('view-individual')"><div class="icon-img" style="background-image: var(--icon-indiv);"></div><span class="label">Точечная Настройка</span></div>
-            <div class="app-icon" onclick="showView('view-prompts')"><div class="icon-img" style="background-image: var(--icon-prompt);"></div><span class="label">Промпты GPT</span></div>
-            <div class="app-icon" onclick="showView('view-templates')"><div class="icon-img" style="background-image: var(--icon-tpl);"></div><span class="label">Шаблоны</span></div>
-            <div class="app-icon" style="background: rgba(255,75,75,0.15); border-color: var(--accent-danger);" onclick="sendToBot('render')">
-                <div class="icon-img" style="background-image: var(--icon-render);"></div><span class="label" style="color: #ff8888;">ЗАПУСТИТЬ РЕНДЕР</span>
+            <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь (URL)</span></div>
+            <div class="app-icon" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Глобал Визуал</span></div>
+            <div class="app-icon" onclick="showView('view-individual')"><span class="emoji">🎯</span><span class="label">Точечная Цель</span></div>
+            <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты AI</span></div>
+            <div class="app-icon" onclick="showView('view-templates')"><span class="emoji">💾</span><span class="label">БД Шаблонов</span></div>
+            <div class="app-icon" style="background: rgba(255,0,85,0.1); border-color: var(--accent-danger);" onclick="sendToBot('render')">
+                <span class="emoji" style="filter: grayscale(100%) sepia(100%) hue-rotate(320deg) drop-shadow(0 0 5px var(--accent-danger));">⚡</span>
+                <span class="label" style="color: var(--accent-danger);">ЗАПУСК РЕНДЕРА</span>
             </div>
         </div>
     </div>
 
     <div id="view-groups" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Очередь</span><span class="header-spacer"></span></div>
+        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">Очередь URL</span><span class="header-spacer"></span></div>
         
-        <div class="section" style="border-color: #9932cc; background: rgba(153, 50, 204, 0.05);">
-            <h3 style="color: #d896ff; border-bottom-color: rgba(153,50,204,0.3);">🌪 Массовый Пылесос</h3>
-            <p style="font-size: 11px; color: #aaa; margin-top: -10px;">Сборщик сам достанет ссылки из профиля TikTok/YT Shorts.</p>
-            <div class="form-group">
-                <input type="url" id="vacuum_url" placeholder="Ссылка на профиль/канал...">
-            </div>
-            <div class="form-group flex-row" style="justify-content: space-between;">
-                <label style="margin:0; color:#d896ff;">Пропускать уже скачанные</label>
-                <input type="checkbox" id="vacuum_skip_used" checked>
-            </div>
-            <div class="flex-row">
-                <input type="number" id="vacuum_count" value="20" min="1" max="100" style="width: 80px; text-align: center;">
-                <button class="btn btn-purple" onclick="runVacuum()">Захватить цели</button>
-            </div>
-        </div>
-
         <div class="section">
-            <h3>Добавить одну цель</h3>
-            <div class="flex-row">
-                <input type="url" id="new_video_url" placeholder="Ссылка (YouTube/TikTok)...">
-                <button class="btn btn-primary" onclick="addVideo()">➕</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3 style="margin-bottom: 5px;">Управление флотами</h3>
+            <h3 style="margin-bottom: 5px;">Управление сессиями</h3>
             <div class="flex-row" style="margin-bottom: 10px;">
                 <select id="active_group_select" onchange="changeActiveGroup()"></select>
                 <button class="btn btn-danger" style="margin:0; padding: 12px;" onclick="deleteGroup()">❌</button>
             </div>
             <div class="flex-row">
-                <button class="btn btn-secondary" onclick="addNewGroup()">➕ Создать</button>
-                <button class="btn btn-secondary" onclick="cloneGroup()">👯 Клон</button>
+                <button class="btn btn-secondary" onclick="addNewGroup()">[+] Создать</button>
+                <button class="btn btn-secondary" onclick="cloneGroup()">[=] Клон</button>
+            </div>
+        </div>
+
+        <div class="section" style="padding: 10px;">
+            <div class="tabs">
+                <div class="tab-btn active" id="btn_tab_single" onclick="switchQueueTab('single')">Одиночная цель</div>
+                <div class="tab-btn" id="btn_tab_mass" onclick="switchQueueTab('mass')">Массовый взлом</div>
+            </div>
+
+            <div id="tab_single" class="tab-content active">
+                <div class="flex-row">
+                    <input type="url" id="new_video_url" placeholder="URL (YouTube/TikTok)...">
+                    <button class="btn btn-primary" onclick="addVideo()">Inject</button>
+                </div>
+            </div>
+
+            <div id="tab_mass" class="tab-content">
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; line-height: 1.2;">Парсинг ссылок с канала TikTok или YT Shorts.</p>
+                <div class="form-group">
+                    <input type="url" id="vacuum_url" placeholder="URL профиля...">
+                </div>
+                <div class="form-group flex-row" style="justify-content: space-between;">
+                    <label style="margin:0; color:var(--accent-cyan);">Фильтр загруженных</label>
+                    <input type="checkbox" id="vacuum_skip_used" checked>
+                </div>
+                <div class="flex-row">
+                    <input type="number" id="vacuum_count" value="20" min="1" max="100" style="width: 70px; text-align: center;">
+                    <button class="btn btn-success" onclick="runVacuum()">Run Vacuum</button>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h3>Список целей (Видео)</h3>
-            <p style="font-size: 11px; color: #aaa; margin-top: -10px;">Нажмите 👁 для загрузки кадра в редактор</p>
+            <h3>Список целей (Payload)</h3>
             <div id="videos_list"></div>
         </div>
     </div>
 
     <div id="view-settings" class="view">
-        <div class="header">
-            <span class="back-btn" id="settings_back_btn" onclick="showView('view-home')">◄ Назад</span>
-            <span class="header-title" id="settings_title">Визуал</span>
-            <span class="header-spacer"></span>
-        </div>
+        <div class="header"><span class="back-btn" id="settings_back_btn" onclick="showView('view-home')">◄ Root</span><span class="header-title" id="settings_title">Визуал</span><span class="header-spacer"></span></div>
         
         <div class="visual-editor-card">
-            <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-main);">Радар (Предпросмотр)</h3>
+            <h3 style="text-align: center; margin-bottom: 15px; color: var(--accent-green); border: none;">[ RADAR_PREVIEW ]</h3>
             
             <div class="preview-container" id="video_preview_box">
-                <div class="preview-placeholder" id="p_placeholder"><span style="font-size:24px; margin-bottom:5px;">📡</span>Ожидание<br>сигнала</div>
+                <div class="preview-placeholder" id="p_placeholder"><span style="font-size:24px; margin-bottom:5px;">📡</span>NO SIGNAL</div>
                 <div id="p_blur_layer" class="preview-blur"></div>
                 <div id="p_subs_layer" class="preview-subs">СУБТИТРЫ</div>
                 <div id="p_banner_layer" class="preview-banner"></div>
             </div>
 
             <div class="tabs">
-                <div class="tab-btn active" id="btn_tab_blur" onclick="switchVisualTab('blur')">Размытие / Сабы</div>
-                <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Баннер</div>
+                <div class="tab-btn active" id="btn_tab_blur" onclick="switchVisualTab('blur')">Размытие</div>
+                <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Вотермарка</div>
             </div>
 
             <div id="tab_blur" class="tab-content active">
-                <div class="form-group flex-row" style="justify-content: space-between; background: rgba(0,255,136,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-main);">
-                    <label style="margin:0; color: var(--accent-main); font-size: 14px;">✨ OCR Авто-Блюр (Нейросеть)</label>
+                <div class="form-group flex-row" style="justify-content: space-between; background: rgba(0,255,102,0.1); padding: 10px; border-radius: 4px; border: 1px solid var(--accent-green);">
+                    <label style="margin:0; color: var(--accent-green); font-size: 12px;">AI OCR Блюр</label>
                     <input type="checkbox" id="auto_blur_toggle" class="auto-save-input" onchange="toggleBlurOptions()">
                 </div>
-                <p style="font-size: 11px; color: #888; margin-top: -5px; margin-bottom: 15px;">Бот сам прочитает кадры и закроет оригинальные субтитры (Координаты подберутся автоматически).</p>
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">Нейросеть прочтет кадр и сама скроет оригинальный текст.</p>
 
                 <div id="manual_blur_options">
-                    <div class="form-group">
-                        <label>Позиция размытия (Центр Y)</label>
-                        <input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Ширина размытия</label>
-                        <input type="range" id="blur_width_slider" class="auto-save-input" min="0" max="100" step="1">
-                    </div>
+                    <div class="form-group"><label>Ось Y Блюра</label><input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1"></div>
+                    <div class="form-group"><label>Ширина Блюра</label><input type="range" id="blur_width_slider" class="auto-save-input" min="0" max="100" step="1"></div>
                 </div>
                 <hr class="divider">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Размер сгенерированных субтитров</label>
-                    <input type="range" id="font_size_slider" class="auto-save-input" min="10" max="150" step="1">
-                </div>
+                <div class="form-group" style="margin-bottom: 0;"><label>Размер новых субтитров</label><input type="range" id="font_size_slider" class="auto-save-input" min="10" max="150" step="1"></div>
             </div>
 
             <div id="tab_banner" class="tab-content">
                 <div class="form-group" style="margin-bottom: 15px;">
-                    <label>Тип баннера</label>
+                    <label>Тип Payload'а</label>
                     <select id="banner_type" class="auto-save-input" onchange="toggleBannerOptions()">
-                        <option value="none">❌ Отключен</option>
-                        <option value="text">📝 Текст</option>
-                        <option value="image">🖼 Картинка</option>
+                        <option value="none">❌ Null</option>
+                        <option value="text">📝 Text</option>
+                        <option value="image">🖼 Image</option>
                     </select>
                 </div>
 
                 <div id="text_options" class="hidden">
-                    <div class="form-group"><label>Позиция текста (Ось Y)</label><input type="range" id="promo_pos_y_slider" class="auto-save-input" min="0" max="100" step="1"></div>
+                    <div class="form-group"><label>Ось Y</label><input type="range" id="promo_pos_y_slider" class="auto-save-input" min="0" max="100" step="1"></div>
                     <div class="form-group"><label>Размер текста</label><input type="range" id="promo_size_slider" class="auto-save-input" min="10" max="150" step="1"></div>
                     <hr class="divider">
                     <div class="form-group">
-                        <label>База текстов:</label>
+                        <label>DB Текстов:</label>
                         <div class="flex-row">
                             <select id="saved_text_banners" class="auto-save-input" onchange="loadSavedTextBanner()"></select>
-                            <button class="btn btn-danger" onclick="deleteTextBanner()" title="Удалить">🗑</button>
+                            <button class="btn btn-danger" onclick="deleteTextBanner()">🗑</button>
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Новый текст (поддерживает перенос)</label>
+                        <label>Input (перенос: \n)</label>
                         <div class="flex-row">
-                            <input type="text" id="promo_text_content" class="auto-save-input" placeholder="Введите текст...">
+                            <input type="text" id="promo_text_content" class="auto-save-input" placeholder=">_ Оффер...">
                             <button class="btn btn-success" onclick="saveTextBanner()">💾</button>
                         </div>
                     </div>
                 </div>
 
                 <div id="img_options" class="hidden">
-                    <div class="form-group"><label>Ось X (Слева-Направо %)</label><input type="range" id="img_pos_x_slider" class="auto-save-input" min="0" max="100" step="1"></div>
-                    <div class="form-group"><label>Ось Y (Сверху-Вниз %)</label><input type="range" id="img_pos_y_slider" class="auto-save-input" min="0" max="100" step="1"></div>
-                    <div class="form-group"><label>Размер картинки (%)</label><input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1"></div>
+                    <div class="form-group"><label>Ось X</label><input type="range" id="img_pos_x_slider" class="auto-save-input" min="0" max="100" step="1"></div>
+                    <div class="form-group"><label>Ось Y</label><input type="range" id="img_pos_y_slider" class="auto-save-input" min="0" max="100" step="1"></div>
+                    <div class="form-group"><label>Scale (%)</label><input type="range" id="img_scale_slider" class="auto-save-input" min="5" max="100" step="1"></div>
                     <hr class="divider">
                     <div class="form-group">
-                        <label>Галерея логотипов:</label>
+                        <label>DB Картинок:</label>
                         <div class="flex-row">
                             <select id="img_selector" class="auto-save-input"></select>
-                            <button class="btn btn-danger" onclick="deleteImageBanner()" title="Удалить">🗑</button>
+                            <button class="btn btn-danger" onclick="deleteImageBanner()">🗑</button>
                         </div>
                     </div>
-                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">📸 Загрузить новую в чате</button>
+                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">[ Upload New ]</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
-            <h3>Логика и Нейросети</h3>
-            
-            <div class="form-group" style="border: 1px solid var(--accent-gold); padding: 10px; border-radius: 8px; background: rgba(255,204,0,0.05);">
-                <label style="color: var(--accent-gold);">Язык перевода (Озвучка и Сабы)</label>
+            <h3>AI Engine Config</h3>
+            <div class="form-group" style="border: 1px solid var(--accent-cyan); padding: 10px; border-radius: 4px; background: rgba(0,229,255,0.05);">
+                <label style="color: var(--accent-cyan);">Target Lang (Voice/Subs)</label>
                 <select id="target_language" class="auto-save-input">
-                    <option value="ru">🇷🇺 Русский</option>
-                    <option value="en">🇬🇧 Английский</option>
-                    <option value="es">🇪🇸 Испанский</option>
-                    <option value="fr">🇫🇷 Французский</option>
-                    <option value="de">🇩🇪 Немецкий</option>
-                    <option value="ar">🇸🇦 Арабский</option>
-                    <option value="hi">🇮🇳 Хинди</option>
+                    <option value="ru">🇷🇺 RU</option>
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="es">🇪🇸 ES</option>
+                    <option value="fr">🇫🇷 FR</option>
+                    <option value="de">🇩🇪 DE</option>
+                    <option value="ar">🇸🇦 AR</option>
+                    <option value="hi">🇮🇳 HI</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>Тематика сленга (GPT)</label>
+                <label>Context Theme (GPT)</label>
                 <select id="theme" class="auto-save-input">
-                    <option value="general">🌍 Обычная (Литературная)</option>
-                    <option value="cs2">🔫 CS2 / Киберспорт</option>
-                    <option value="crypto">📈 Трейдинг / Крипта</option>
-                    <option value="casino">🎰 Гемблинг / Казино</option>
-                    <option value="tarot">🔮 Таро / Эзотерика</option>
+                    <option value="general">Обычная</option>
+                    <option value="cs2">CS2 / E-sports</option>
+                    <option value="crypto">Trading / Crypto</option>
+                    <option value="casino">Gambling / Casino</option>
+                    <option value="tarot">Esoteric / Tarot</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Голос (ElevenLabs)</label>
+                <label>Voice Clone (ElevenLabs)</label>
                 <select id="voice" class="auto-save-input">
-                    <option value="rand_all">🎲 Абсолютный рандом</option>
-                    <option value="rand_male">👨 Случайный Мужской</option>
-                    <option value="rand_female">👩 Случайная Женский</option>
-                    <option value="male_1">👨 Маркус (Грубый)</option>
-                    <option value="male_2">👨 Билл (Спокойный)</option>
-                    <option value="fem_1">👩 Рэйчел (Мягкий)</option>
-                    <option value="fem_2">👩 Сара (Динамичный)</option>
+                    <option value="rand_all">🎲 Random All</option>
+                    <option value="rand_male">👨 Random Male</option>
+                    <option value="rand_female">👩 Random Female</option>
+                    <option value="male_1">👨 Voice 1 (Rough)</option>
+                    <option value="male_2">👨 Voice 2 (Calm)</option>
+                    <option value="fem_1">👩 Voice 3 (Soft)</option>
+                    <option value="fem_2">👩 Voice 4 (Dynamic)</option>
                 </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-                <label>Фоновая музыка</label>
+                <label>BGM (Audio)</label>
                 <select id="music" class="auto-save-input">
-                    <option value="rand">🎲 Случайный трек</option>
-                    <option value="none">🔇 Без музыки</option>
-                    <option value="mu_space">🚀 Космическая / Фон</option>
-                    <option value="mu_funny">🤡 Веселая</option>
-                    <option value="mu_epic">⚔️ Эпичная / Экшен</option>
+                    <option value="rand">🎲 Random Track</option>
+                    <option value="none">🔇 Null</option>
+                    <option value="mu_space">🚀 Space Background</option>
+                    <option value="mu_funny">🤡 Funny Theme</option>
+                    <option value="mu_epic">⚔️ Epic Theme</option>
                 </select>
             </div>
         </div>
     </div>
 
     <div id="view-individual" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Точечная Настройка</span><span class="header-spacer"></span></div>
+        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">Target Config</span><span class="header-spacer"></span></div>
         <div class="section">
-            <h3>Видео в активной группе</h3>
-            <p style="font-size: 12px; color: var(--text-muted);">Выберите конкретное видео, чтобы задать ему персональные настройки блюра или баннера.</p>
+            <h3>Цели в сессии</h3>
+            <p style="font-size: 11px; color: var(--text-muted);">Переопределение глобальных настроек для конкретного URL.</p>
             <div id="indiv_videos_list"></div>
         </div>
     </div>
 
     <div id="view-prompts" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Промпты</span><span class="header-spacer"></span></div>
+        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">AI Prompts</span><span class="header-spacer"></span></div>
         <div class="section">
-            <h3>Кастомное правило (Для группы)</h3>
-            <input type="text" id="active_prompt" placeholder="Напр: Оставь слово 'Spin' на английском" oninput="appState.groups[appState.activeGroupIdx].config.prompt_text_content = this.value; saveStateLocally();">
+            <h3>Активное правило</h3>
+            <input type="text" id="active_prompt" placeholder=">_ Игнорируй слово..." oninput="appState.groups[appState.activeGroupIdx].config.prompt_text_content = this.value; saveStateLocally();">
         </div>
         <div class="section">
-            <h3>База промптов</h3>
+            <h3>DB Промптов</h3>
             <div class="flex-row" style="margin-bottom: 15px;">
                 <input type="text" id="new_prompt_text" placeholder="Новое правило...">
                 <button class="btn btn-success" onclick="addPrompt()">💾</button>
@@ -376,23 +355,42 @@
     </div>
 
     <div id="view-templates" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Шаблоны</span><span class="header-spacer"></span></div>
+        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">Config DB</span><span class="header-spacer"></span></div>
         <div class="section">
-            <h3>Сохранить текущие настройки</h3>
+            <h3>Save Current Config</h3>
             <div class="flex-row">
-                <input type="text" id="new_tpl_name" placeholder="Имя шаблона...">
+                <input type="text" id="new_tpl_name" placeholder="Filename...">
                 <button class="btn btn-success" onclick="saveTemplate()">💾</button>
             </div>
         </div>
         <div class="section">
-            <h3>Мои шаблоны</h3>
+            <h3>Saved Configs</h3>
             <div id="templates_list"></div>
         </div>
     </div>
 
     <script>
+        // АНИМАЦИЯ МАТРИЦЫ
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const matrixChars = "01".split("");
+        const fontSize = 14; const columns = canvas.width / fontSize;
+        const drops = []; for(let x = 0; x < columns; x++) drops[x] = 1;
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(5, 5, 5, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00e5ff"; ctx.font = fontSize + "px monospace";
+            for(let i = 0; i < drops.length; i++) {
+                const text = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
         let tg = window.Telegram.WebApp;
-        tg.expand(); tg.setHeaderColor('#18181c'); tg.setBackgroundColor('#050b14');
+        tg.expand(); tg.setHeaderColor('#050505'); tg.setBackgroundColor('#050505');
         
         const subTranslations = { "ru": "СУБТИТРЫ", "en": "SUBTITLES", "es": "SUBTÍTULOS", "fr": "SOUS-TITRES", "de": "UNTERTITEL", "ar": "ترجمة", "hi": "उपशीर्षक" };
 
@@ -406,11 +404,9 @@
         let editingTarget = 'global'; 
 
         try {
-            const localData = localStorage.getItem('contentHijackerState');
+            const localData = localStorage.getItem('hijackerV2State');
             if (localData) appState = { ...appState, ...JSON.parse(localData) };
-            
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataStr = urlParams.get('data');
+            const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
                 if(data.images) appState.images = data.images;
@@ -418,15 +414,14 @@
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
             }
-        } catch(e) { console.error("Parse error", e); }
+        } catch(e) {}
 
-        function saveStateLocally() { localStorage.setItem('contentHijackerState', JSON.stringify(appState)); }
+        function saveStateLocally() { localStorage.setItem('hijackerV2State', JSON.stringify(appState)); }
 
-        function setAppBackground(viewId) {
-            const bgElement = document.getElementById('main_bg');
-            if(viewId === 'view-home' || viewId === 'view-settings' || viewId === 'view-individual') bgElement.style.backgroundImage = 'var(--bg-ship)';
-            else if (viewId === 'view-groups') bgElement.style.backgroundImage = 'var(--bg-cabin)';
-            else bgElement.style.backgroundImage = 'var(--bg-map)';
+        function switchQueueTab(tabId) {
+            document.getElementById('tab_single').classList.remove('active'); document.getElementById('tab_mass').classList.remove('active');
+            document.getElementById('btn_tab_single').classList.remove('active'); document.getElementById('btn_tab_mass').classList.remove('active');
+            document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
         }
 
         function switchVisualTab(tabId) {
@@ -445,23 +440,18 @@
             let isAuto = document.getElementById("auto_blur_toggle").checked;
             document.getElementById("manual_blur_options").style.opacity = isAuto ? "0.3" : "1";
             document.getElementById("manual_blur_options").style.pointerEvents = isAuto ? "none" : "auto";
-            
             if(isAuto) {
-                document.getElementById('p_blur_layer').innerHTML = "<div style='font-size:10px; color:#00ff88; text-align:center; line-height:1.2; padding-top:20%;'>⚡<br>AUTO-BLUR<br>AI ZONE</div>";
-                document.getElementById('p_blur_layer').style.background = "rgba(0, 255, 136, 0.1)";
+                document.getElementById('p_blur_layer').innerHTML = "<div style='font-size:10px; color:var(--accent-green); text-align:center; line-height:1.2; padding-top:20%; background: rgba(0,255,102,0.1); width:100%; height:100%;'>⚡<br>OCR_BLUR<br>ACTIVE</div>";
             } else {
                 document.getElementById('p_blur_layer').innerHTML = "";
-                document.getElementById('p_blur_layer').style.background = "rgba(255, 255, 255, 0.05)";
             }
         }
 
-        document.querySelectorAll('.auto-save-input').forEach(input => {
-            input.addEventListener('input', () => { updateStateFromUI(); updatePreview(); saveStateLocally(); });
-        });
+        document.querySelectorAll('.auto-save-input').forEach(input => { input.addEventListener('input', () => { updateStateFromUI(); updatePreview(); saveStateLocally(); }); });
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active'); window.scrollTo(0, 0); setAppBackground(viewId);
+            document.getElementById(viewId).classList.add('active'); window.scrollTo(0, 0); 
             if(viewId === 'view-home') renderHome();
             if(viewId === 'view-groups') renderGroups();
             if(viewId === 'view-individual') renderIndiv();
@@ -480,7 +470,7 @@
         function renderGroups() {
             let sel = document.getElementById("active_group_select"); sel.innerHTML = "";
             appState.groups.forEach((g, i) => {
-                let opt = document.createElement("option"); opt.value = i; opt.innerText = `Флот ${i+1} (${g.videos.length} целей)`;
+                let opt = document.createElement("option"); opt.value = i; opt.innerText = `Сессия ${i+1} (${g.videos.length} URL)`;
                 if(i === appState.activeGroupIdx) opt.selected = true; sel.appendChild(opt);
             });
             renderVideosList('videos_list');
@@ -492,17 +482,16 @@
             let curr = appState.groups[appState.activeGroupIdx];
             let newVids = curr.videos.map(v => Object.assign({}, v, {id: Math.random().toString(36).substr(2, 8)}));
             appState.groups.push({id: appState.groups.length+1, videos: newVids, config: Object.assign({}, curr.config)});
-            appState.activeGroupIdx = appState.groups.length - 1; saveStateLocally(); renderGroups(); tg.showAlert("Флот клонирован!");
+            appState.activeGroupIdx = appState.groups.length - 1; saveStateLocally(); renderGroups(); tg.showAlert("Склонировано!");
         }
         function deleteGroup() { if(appState.groups.length <= 1) return tg.showAlert("Нельзя удалить последнюю!"); appState.groups.splice(appState.activeGroupIdx, 1); appState.activeGroupIdx = Math.max(0, appState.activeGroupIdx - 1); saveStateLocally(); renderGroups(); }
 
-        // ПЫЛЕСОС
         function runVacuum() {
             let url = document.getElementById("vacuum_url").value.trim();
             let count = document.getElementById("vacuum_count").value;
             let skip = document.getElementById("vacuum_skip_used").checked;
-            if(!url) return tg.showAlert("Введите ссылку на профиль!");
-            tg.showConfirm(`Отправить дронов на сбор ${count} целей? Бот пришлет уведомление по готовности.`, function(c) {
+            if(!url) return tg.showAlert("Введите URL!");
+            tg.showConfirm(`Запустить парсер на ${count} целей? Бот уведомит по завершении.`, function(c) {
                 if(c) { sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip}); }
             });
         }
@@ -523,12 +512,11 @@
         function loadPreviewForVideo(url) {
             document.getElementById('video_preview_box').style.backgroundImage = "none";
             document.getElementById('p_placeholder').style.display = 'flex';
-            document.getElementById('p_placeholder').innerHTML = "<div class='spinner'></div><span>Перехват...</span>";
+            document.getElementById('p_placeholder').innerHTML = "<div class='spinner'></div><span>Fetching...</span>";
             openVisuals('global'); 
             fetchPreviewLocal(url).then(previewUrl => {
-                if(previewUrl) {
-                    appState.preview_img = previewUrl; document.getElementById('video_preview_box').style.backgroundImage = `url('${previewUrl}')`; document.getElementById('p_placeholder').style.display = 'none';
-                } else { document.getElementById('p_placeholder').innerHTML = "<span style='color:var(--accent-danger)'>Зашифровано</span>"; }
+                if(previewUrl) { appState.preview_img = previewUrl; document.getElementById('video_preview_box').style.backgroundImage = `url('${previewUrl}')`; document.getElementById('p_placeholder').style.display = 'none'; } 
+                else { document.getElementById('p_placeholder').innerHTML = "<span style='color:var(--accent-danger)'>ERR_NO_DATA</span>"; }
                 saveStateLocally();
             });
         }
@@ -536,7 +524,7 @@
         function addVideo() {
             let url = document.getElementById("new_video_url").value.trim(); if(!url) return;
             appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
-            document.getElementById("new_video_url").value = ""; saveStateLocally(); renderGroups(); tg.showAlert("Цель добавлена!");
+            document.getElementById("new_video_url").value = ""; saveStateLocally(); renderGroups(); tg.showAlert("URL injected!");
         }
         
         function deleteVideo(idx) { 
@@ -556,17 +544,17 @@
                 let hasSettings = Object.keys(v.settings).length > 0;
                 let actionsHTML = (containerId === 'videos_list') ? 
                     `<button class="btn btn-primary" onclick="loadPreviewForVideo('${v.source}')" title="Предпросмотр">👁</button><button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>` : 
-                    `${hasSettings ? `<button class="btn btn-secondary" onclick="resetIndiv(${i})">Сброс</button>` : ''}<button class="btn btn-primary" onclick="openVisuals(${i})">Настроить</button>`;
-                list.innerHTML += `<div class="list-item"><span class="title">🎬 ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-gold)' : 'var(--text-muted)'};">${hasSettings ? '⚠️ Кастом' : 'Глобал'}</small></span><div class="list-item-actions">${actionsHTML}</div></div>`;
+                    `${hasSettings ? `<button class="btn btn-secondary" onclick="resetIndiv(${i})">Сброс</button>` : ''}<button class="btn btn-primary" onclick="openVisuals(${i})">Config</button>`;
+                list.innerHTML += `<div class="list-item"><span class="title"> ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-cyan)' : 'var(--text-muted)'};">${hasSettings ? '> custom_cfg' : '> global_cfg'}</small></span><div class="list-item-actions">${actionsHTML}</div></div>`;
             });
         }
 
         function refreshTextBannersDropdown() {
-            let sel = document.getElementById("saved_text_banners"); sel.innerHTML = "<option value=''>-- Выберите --</option>";
+            let sel = document.getElementById("saved_text_banners"); sel.innerHTML = "<option value=''>-- Null --</option>";
             if (!appState.text_banners) appState.text_banners = [];
             appState.text_banners.forEach((txt, idx) => { let opt = document.createElement("option"); opt.value = idx; opt.innerText = txt.length > 30 ? txt.substring(0, 30) + '...' : txt; sel.appendChild(opt); });
         }
-        function saveTextBanner() { let txt = document.getElementById("promo_text_content").value.trim(); if (txt && !appState.text_banners.includes(txt)) { appState.text_banners.push(txt); saveStateLocally(); refreshTextBannersDropdown(); tg.showAlert("Сохранено!"); } }
+        function saveTextBanner() { let txt = document.getElementById("promo_text_content").value.trim(); if (txt && !appState.text_banners.includes(txt)) { appState.text_banners.push(txt); saveStateLocally(); refreshTextBannersDropdown(); } }
         function loadSavedTextBanner() { let idx = document.getElementById("saved_text_banners").value; if (idx !== "") { document.getElementById("promo_text_content").value = appState.text_banners[idx]; updateStateFromUI(); updatePreview(); saveStateLocally(); } }
         function deleteTextBanner() { let idx = document.getElementById("saved_text_banners").value; if (idx !== "") { appState.text_banners.splice(idx, 1); document.getElementById("promo_text_content").value = ""; document.getElementById("saved_text_banners").value = ""; saveStateLocally(); refreshTextBannersDropdown(); updateStateFromUI(); updatePreview(); } }
         
@@ -574,7 +562,7 @@
             let idx = document.getElementById("img_selector").value;
             if (idx !== "") {
                 appState.images.splice(idx, 1); saveStateLocally(); 
-                let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "<option value=''>База пуста</option>";
+                let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "<option value=''>-- Null --</option>";
                 if (appState.images.length > 0) { imgSelect.innerHTML = ""; appState.images.forEach((imgObj, index) => { let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name; imgSelect.appendChild(opt); }); }
                 updateStateFromUI(); updatePreview();
             }
@@ -582,42 +570,32 @@
 
         function refreshImageDropdown(conf) {
             let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "";
-            if (appState.images.length === 0) { imgSelect.innerHTML = "<option value=''>База пуста</option>"; } 
+            if (appState.images.length === 0) { imgSelect.innerHTML = "<option value=''>-- Null --</option>"; } 
             else { appState.images.forEach((imgObj, index) => { let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name; imgSelect.appendChild(opt); }); if(conf.img_idx !== undefined && conf.img_idx < appState.images.length) imgSelect.value = conf.img_idx; }
         }
 
         function openVisuals(target) {
             editingTarget = target; let conf = {};
             if(target === 'global') {
-                document.getElementById('settings_title').innerText = "Глобальный Визуал"; document.getElementById('settings_back_btn').onclick = () => showView('view-home');
+                document.getElementById('settings_title').innerText = "Global Cfg"; document.getElementById('settings_back_btn').onclick = () => showView('view-home');
                 conf = appState.groups[appState.activeGroupIdx].config;
             } else {
-                document.getElementById('settings_title').innerText = `Цель ${target+1}`; document.getElementById('settings_back_btn').onclick = () => showView('view-individual');
+                document.getElementById('settings_title').innerText = `Target [${target}]`; document.getElementById('settings_back_btn').onclick = () => showView('view-individual');
                 conf = Object.assign({}, appState.groups[appState.activeGroupIdx].config, appState.groups[appState.activeGroupIdx].videos[target].settings);
                 let vUrl = appState.groups[appState.activeGroupIdx].videos[target].source;
                 fetchPreviewLocal(vUrl).then(u => { if(u) { appState.preview_img = u; saveStateLocally(); updatePreviewBG(); } });
             }
 
-            document.getElementById("target_language").value = conf.target_language || "ru";
-            document.getElementById("theme").value = conf.theme || "general";
-            document.getElementById("voice").value = conf.voice || "rand_all";
-            document.getElementById("music").value = conf.music || "rand";
+            document.getElementById("target_language").value = conf.target_language || "ru"; document.getElementById("theme").value = conf.theme || "general"; document.getElementById("voice").value = conf.voice || "rand_all"; document.getElementById("music").value = conf.music || "rand";
             
-            let isAuto = conf.auto_blur || false;
-            document.getElementById("auto_blur_toggle").checked = isAuto;
+            let isAuto = conf.auto_blur || false; document.getElementById("auto_blur_toggle").checked = isAuto;
             
             document.getElementById("blur_zone_slider").value = Math.round((conf.blur_zone !== undefined ? conf.blur_zone : 0.15) * 100);
-            document.getElementById("blur_width_slider").value = conf.blur_width !== undefined ? conf.blur_width : 15;
-            document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
+            document.getElementById("blur_width_slider").value = conf.blur_width !== undefined ? conf.blur_width : 15; document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
             
-            document.getElementById("banner_type").value = conf.banner_type || "none";
-            document.getElementById("promo_text_content").value = conf.promo_text_content || "";
-            document.getElementById("promo_pos_y_slider").value = conf.promo_pos_y !== undefined ? conf.promo_pos_y : 85;
-            document.getElementById("promo_size_slider").value = conf.promo_size !== undefined ? conf.promo_size : 55;
-
-            document.getElementById("img_pos_x_slider").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50;
-            document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85;
-            document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
+            document.getElementById("banner_type").value = conf.banner_type || "none"; document.getElementById("promo_text_content").value = conf.promo_text_content || "";
+            document.getElementById("promo_pos_y_slider").value = conf.promo_pos_y !== undefined ? conf.promo_pos_y : 85; document.getElementById("promo_size_slider").value = conf.promo_size !== undefined ? conf.promo_size : 55;
+            document.getElementById("img_pos_x_slider").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50; document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85; document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
             refreshImageDropdown(conf); refreshTextBannersDropdown(); toggleBannerOptions(); toggleBlurOptions(); updatePreviewBG(); updatePreview();
             if(document.getElementById('view-settings').classList.contains('active') === false) showView('view-settings');
@@ -625,7 +603,7 @@
 
         function updatePreviewBG() {
             if (appState.preview_img) { document.getElementById('video_preview_box').style.backgroundImage = "url('" + appState.preview_img + "')"; document.getElementById('p_placeholder').style.display = 'none'; } 
-            else { document.getElementById('video_preview_box').style.backgroundImage = "none"; document.getElementById('p_placeholder').style.display = 'flex'; document.getElementById('p_placeholder').innerHTML = "<span style='font-size:24px; margin-bottom:5px;'>📡</span>Ожидание<br>сигнала"; }
+            else { document.getElementById('video_preview_box').style.backgroundImage = "none"; document.getElementById('p_placeholder').style.display = 'flex'; document.getElementById('p_placeholder').innerHTML = "<span style='font-size:24px; margin-bottom:5px;'>📡</span>NO SIGNAL"; }
         }
 
         function updateStateFromUI() {
@@ -660,14 +638,14 @@
 
             const bannerLayer = document.getElementById('p_banner_layer');
             if (bType === 'text') {
-                const pText = document.getElementById('promo_text_content').value || "ОФФЕР";
+                const pText = document.getElementById('promo_text_content').value || ">_ TEXT";
                 const pPosY = document.getElementById('promo_pos_y_slider').value;
                 const pSize = document.getElementById('promo_size_slider').value;
                 bannerLayer.innerHTML = pText.replace(/\\n/g, '<br>'); bannerLayer.style.fontSize = (pSize / 6) + 'px'; bannerLayer.style.top = pPosY + '%'; bannerLayer.style.left = '50%'; bannerLayer.style.width = '100%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else if (bType === 'image') {
                 let imgIdx = document.getElementById("img_selector").value;
                 if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) { bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; } 
-                else { bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>НЕТ ДАННЫХ</div>"; }
+                else { bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; }
                 let scale = document.getElementById('img_scale_slider').value; bannerLayer.style.width = scale + '%'; bannerLayer.style.top = document.getElementById('img_pos_y_slider').value + '%'; bannerLayer.style.left = document.getElementById('img_pos_x_slider').value + '%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else { bannerLayer.style.display = 'none'; }
         }
@@ -678,27 +656,24 @@
         function renderPrompts() {
             document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
             let list = document.getElementById("prompts_list"); list.innerHTML = "";
-            if (appState.prompts.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>База пуста.</p>";
-            appState.prompts.forEach((p, i) => { list.innerHTML += `<div class="list-item"><span class="title">${p}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delPrompt(${i})">❌</button><button class="btn btn-primary" onclick="selPrompt(${i})">Выбрать</button></div></div>`; });
+            appState.prompts.forEach((p, i) => { list.innerHTML += `<div class="list-item"><span class="title">${p}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delPrompt(${i})">❌</button><button class="btn btn-primary" onclick="selPrompt(${i})">Load</button></div></div>`; });
         }
         function addPrompt() { let t = document.getElementById("new_prompt_text").value.trim(); if(t) { appState.prompts.push(t); document.getElementById("new_prompt_text").value = ""; saveStateLocally(); renderPrompts(); } }
-        function selPrompt(idx) { document.getElementById("active_prompt").value = appState.prompts[idx]; appState.groups[appState.activeGroupIdx].config.prompt_text_content = appState.prompts[idx]; saveStateLocally(); tg.showAlert("Промпт применен!");}
+        function selPrompt(idx) { document.getElementById("active_prompt").value = appState.prompts[idx]; appState.groups[appState.activeGroupIdx].config.prompt_text_content = appState.prompts[idx]; saveStateLocally(); }
         function delPrompt(idx) { appState.prompts.splice(idx, 1); saveStateLocally(); renderPrompts(); }
 
         function renderTemplates() {
             let list = document.getElementById("templates_list"); list.innerHTML = "";
-            let keys = Object.keys(appState.templates);
-            if (keys.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>Нет шаблонов.</p>";
-            for (let name in appState.templates) { list.innerHTML += `<div class="list-item"><span class="title">📂 ${name}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delTemplate('${name}')">❌</button><button class="btn btn-primary" onclick="applyTemplate('${name}')">Загрузить</button></div></div>`; }
+            for (let name in appState.templates) { list.innerHTML += `<div class="list-item"><span class="title">📂 ${name}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delTemplate('${name}')">❌</button><button class="btn btn-primary" onclick="applyTemplate('${name}')">Load</button></div></div>`; }
         }
-        function saveTemplate() { let name = document.getElementById("new_tpl_name").value.trim(); if(name) { appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config); document.getElementById("new_tpl_name").value = ""; saveStateLocally(); renderTemplates(); tg.showAlert(`Шаблон сохранен!`); } }
-        function applyTemplate(name) { appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]); saveStateLocally(); tg.showAlert(`Шаблон загружен!`); showView('view-home'); }
+        function saveTemplate() { let name = document.getElementById("new_tpl_name").value.trim(); if(name) { appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config); document.getElementById("new_tpl_name").value = ""; saveStateLocally(); renderTemplates(); tg.showAlert(`Saved!`); } }
+        function applyTemplate(name) { appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]); saveStateLocally(); tg.showAlert(`Loaded!`); showView('view-home'); }
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
         function sendToBot(action, extraData = null) {
             if (action === 'render') {
                 let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
-                if (totalVids === 0) return tg.showAlert("Очередь пуста! Добавьте цели для захвата.");
+                if (totalVids === 0) return tg.showAlert("NULL Payload. Add URLs first.");
                 let payload = { action: action, state: appState };
                 tg.sendData(JSON.stringify(payload));
                 appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}]; appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
