@@ -7,13 +7,14 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        /* ХАКЕРСКАЯ КИБЕР-ТЕМА (Watch Dogs 2 / Matrix) */
+        /* ХАКЕРСКАЯ КИБЕР-ТЕМА */
         :root {
             --bg-main: #050505;
             --bg-card: rgba(10, 15, 20, 0.85);
             --accent-green: #00ff66; 
             --accent-cyan: #00e5ff;
             --accent-danger: #ff0055;
+            --accent-warn: #ffaa00;
             --text-main: #e0e0e0;
             --text-muted: #6b7a8c;
             --border-color: #1a2530;
@@ -28,7 +29,6 @@
             overflow-x: hidden;
         }
 
-        /* АНИМАЦИЯ МАТРИЦЫ НА ФОНЕ */
         #matrixCanvas {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -1; pointer-events: none; opacity: 0.35;
@@ -36,7 +36,6 @@
 
         h1, h2, h3, .header-title { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* HEADER */
         .header {
             padding: 15px; text-align: center; border-bottom: 1px solid var(--accent-green);
             background: rgba(5, 5, 5, 0.9); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
@@ -47,12 +46,10 @@
         .back-btn { color: var(--accent-cyan); cursor: pointer; font-size: 14px; width: 60px; text-align: left; font-weight: 600; text-transform: uppercase; }
         .header-spacer { width: 60px; }
         
-        /* VIEWS */
         .view { display: none; padding: 15px; padding-bottom: 80px; }
         .view.active { display: block; animation: cyberFade 0.3s ease-out; }
         @keyframes cyberFade { from { opacity: 0; filter: contrast(2) saturate(200%); transform: translateY(5px); } to { opacity: 1; filter: none; transform: translateY(0); } }
         
-        /* HOME GRID */
         .home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .app-icon {
             background: var(--bg-card); border: 1px solid var(--border-color);
@@ -64,7 +61,6 @@
         .app-icon span.emoji { font-size: 32px; display: block; margin-bottom: 10px; filter: grayscale(100%) sepia(100%) hue-rotate(90deg) drop-shadow(0 0 5px var(--accent-green)); }
         .app-icon span.label { font-size: 12px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
         
-        /* FORMS & LISTS */
         .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; margin-bottom: 15px; border-left: 3px solid var(--accent-cyan); }
         h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: var(--accent-green); border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
         .form-group { margin-bottom: 15px; }
@@ -79,12 +75,10 @@
         }
         select:focus, input[type="text"]:focus, input[type="url"]:focus, input[type="number"]:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0,229,255,0.2); }
         
-        /* SLIDERS */
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 4px; background: var(--border-color); border-radius: 0; outline: none; margin-top: 8px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 20px; background: var(--accent-cyan); cursor: pointer; border-radius: 2px; }
         input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-green); cursor: pointer; }
 
-        /* VISUAL EDITOR */
         .visual-editor-card { background: var(--bg-card); border-radius: 4px; padding: 15px; border: 1px solid var(--accent-cyan); margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,229,255,0.05); }
         .preview-container { width: 160px; height: 284px; background-color: #000; background-size: cover; background-position: center; margin: 0 auto 15px auto; border-radius: 4px; position: relative; overflow: hidden; border: 1px solid var(--accent-green); box-shadow: 0 0 15px rgba(0,255,102,0.2); }
         .preview-placeholder { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: var(--accent-cyan); font-size: 11px; transform: translateY(-50%); z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; }
@@ -95,14 +89,12 @@
         .spinner { width: 18px; height: 18px; border: 2px solid var(--border-color); border-radius: 50%; border-top-color: var(--accent-cyan); animation: spin 1s linear infinite; margin-bottom: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* TABS UI */
         .tabs { display: flex; margin-bottom: 15px; background: #000; border-radius: 4px; padding: 2px; border: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 8px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         .tab-btn.active { background: var(--border-color); color: var(--accent-green); border-bottom: 2px solid var(--accent-green); }
         .tab-content { display: none; padding: 5px 0; }
         .tab-content.active { display: block; animation: fadeIn 0.2s; }
 
-        /* BUTTONS */
         .btn {
             background-color: var(--border-color); color: var(--text-main);
             border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 4px; font-size: 13px; font-weight: bold;
@@ -114,11 +106,14 @@
         .btn-danger { background-color: rgba(255,0,85,0.1); border-color: var(--accent-danger); color: var(--accent-danger); }
         .btn-success { background-color: rgba(0,255,102,0.1); border-color: var(--accent-green); color: var(--accent-green); }
         
-        /* LIST ITEMS */
         .list-item { background: #000; padding: 12px; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); border-left: 3px solid var(--text-muted); }
-        .list-item span.title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; color: var(--text-main); }
-        .list-item-actions { display: flex; gap: 5px; }
+        .list-item span.title { font-size: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 65%; color: var(--text-main); }
+        .list-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
         .list-item button { padding: 6px 10px; font-size: 12px; margin: 0; width: auto; border-radius: 2px; }
+        
+        /* СТИЛЬ ДЛЯ СТАТИСТИКИ */
+        .stats-row { font-size: 10px; color: var(--accent-cyan); display: flex; gap: 6px; margin-top: 5px; margin-bottom: 4px; font-family: 'Share Tech Mono', monospace;}
+        .stats-row span { background: rgba(0, 229, 255, 0.05); padding: 2px 5px; border-radius: 2px; border: 1px solid rgba(0, 229, 255, 0.2); }
         
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 8px; align-items: center; }
@@ -179,14 +174,23 @@
             </div>
 
             <div id="tab_mass" class="tab-content">
-                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; line-height: 1.2;">Парсинг ссылок с канала TikTok или YT Shorts.</p>
                 <div class="form-group">
                     <input type="url" id="vacuum_url" placeholder="URL профиля...">
                 </div>
-                <div class="form-group flex-row" style="justify-content: space-between;">
+                
+                <div class="form-group flex-row" style="justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
                     <label style="margin:0; color:var(--accent-cyan);">Фильтр загруженных</label>
                     <input type="checkbox" id="vacuum_skip_used" checked>
                 </div>
+                
+                <div class="form-group flex-row" style="justify-content: space-between;">
+                    <label style="margin:0;">Сортировка</label>
+                    <select id="vacuum_sort_mode" style="width: auto; padding: 8px; font-size: 12px;">
+                        <option value="recent">⏱ Последние</option>
+                        <option value="popular">🔥 Популярные</option>
+                    </select>
+                </div>
+
                 <div class="flex-row">
                     <input type="number" id="vacuum_count" value="20" min="1" max="100" style="width: 70px; text-align: center;">
                     <button class="btn btn-success" onclick="runVacuum()">Run Vacuum</button>
@@ -195,10 +199,16 @@
         </div>
 
         <div class="section">
-            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0; border: none; padding: 0;">Список целей</h3>
-                <button class="btn btn-danger" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="clearCurrentQueue()">🗑 Очистить все</button>
+            <div class="tabs" style="margin-bottom: 10px;">
+                <div class="tab-btn active" id="btn_tab_q_active" onclick="switchPayloadTab('active')">Ожидают</div>
+                <div class="tab-btn" id="btn_tab_q_done" onclick="switchPayloadTab('done')" style="color: var(--accent-warn);">Обработанные</div>
             </div>
+
+            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; border: none; padding: 0;" id="payload_title_label">Payload</h3>
+                <button class="btn btn-danger" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="clearCurrentQueueView()">🗑 Очистить</button>
+            </div>
+            
             <div id="videos_list"></div>
         </div>
     </div>
@@ -400,6 +410,7 @@
             lastQueueTab: 'single'
         };
         let editingTarget = 'global'; 
+        let activePayloadTab = 'active';
 
         try {
             const localData = localStorage.getItem('hijackerV2State');
@@ -409,15 +420,18 @@
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
                 
-                // Подтягиваем только картинки от бота (остальное Web App хранит сам!)
                 if(data.images) appState.images = data.images;
                 
-                // ИНКРЕМЕНТАЛЬНАЯ СИНХРОНИЗАЦИЯ: Добавляем ТОЛЬКО новые ссылки (решает проблему URI Too Long и бага с удалением)
                 if(data.new_urls && data.sync_id && data.sync_id.toString() !== localStorage.getItem('last_sync_id')) {
-                    data.new_urls.forEach(u => {
+                    data.new_urls.forEach(obj => {
                         appState.groups[appState.activeGroupIdx].videos.push({
                             id: Math.random().toString(36).substr(2, 8), 
-                            source: u, 
+                            source: obj.u, 
+                            title: obj.t,
+                            views: obj.v,
+                            likes: obj.l,
+                            comments: obj.c,
+                            processed: obj.p,
                             settings: {}
                         });
                     });
@@ -430,6 +444,20 @@
         if (!appState.lastQueueTab) appState.lastQueueTab = 'single';
 
         function saveStateLocally() { localStorage.setItem('hijackerV2State', JSON.stringify(appState)); }
+
+        function formatNum(num) {
+            if (!num) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            return num;
+        }
+
+        function switchPayloadTab(tabId) {
+            activePayloadTab = tabId;
+            document.getElementById('btn_tab_q_active').classList.toggle('active', tabId === 'active');
+            document.getElementById('btn_tab_q_done').classList.toggle('active', tabId === 'done');
+            renderVideosList('videos_list');
+        }
 
         function switchQueueTab(tabId) {
             document.getElementById('tab_single').classList.remove('active'); document.getElementById('tab_mass').classList.remove('active');
@@ -474,7 +502,9 @@
 
         function renderHome() {
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
-            document.getElementById('home_videos_count').innerText = appState.groups[appState.activeGroupIdx].videos.length;
+            // Считаем только те видео, которые не в истории (не отработаны)
+            let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
+            document.getElementById('home_videos_count').innerText = activeCount;
             tg.MainButton.hide();
         }
 
@@ -504,9 +534,11 @@
             let url = document.getElementById("vacuum_url").value.trim();
             let count = document.getElementById("vacuum_count").value;
             let skip = document.getElementById("vacuum_skip_used").checked;
+            let sort_mode = document.getElementById("vacuum_sort_mode").value;
+            
             if(!url) return tg.showAlert("Введите URL!");
             tg.showConfirm(`Запустить парсер на ${count} целей? Бот уведомит по завершении.`, function(c) {
-                if(c) { sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip}); }
+                if(c) { sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip, sort_mode: sort_mode}); }
             });
         }
 
@@ -537,23 +569,36 @@
 
         function addVideo() {
             let url = document.getElementById("new_video_url").value.trim(); if(!url) return;
-            appState.groups[appState.activeGroupIdx].videos.push({id: Math.random().toString(36).substr(2, 8), source: url, settings: {}});
+            appState.groups[appState.activeGroupIdx].videos.push({
+                id: Math.random().toString(36).substr(2, 8), 
+                source: url, 
+                title: "Manual Inject URL",
+                views: 0, likes: 0, comments: 0,
+                processed: false,
+                settings: {}
+            });
             document.getElementById("new_video_url").value = ""; saveStateLocally(); renderGroups(); tg.showAlert("URL injected!");
         }
         
-        function deleteVideo(idx) { 
-            appState.groups[appState.activeGroupIdx].videos.splice(idx, 1);
+        function deleteVideo(realIdx) { 
+            appState.groups[appState.activeGroupIdx].videos.splice(realIdx, 1);
             if (appState.groups[appState.activeGroupIdx].videos.length === 0) appState.preview_img = ""; 
             saveStateLocally(); 
             if(document.getElementById('view-groups').classList.contains('active')) renderGroups();
         }
 
-        function clearCurrentQueue() {
-            if(appState.groups[appState.activeGroupIdx].videos.length === 0) return;
-            tg.showConfirm("Удалить ВСЕ видео из текущей очереди?", function(c) {
+        function clearCurrentQueueView() {
+            let vids = appState.groups[appState.activeGroupIdx].videos;
+            if(vids.length === 0) return;
+            
+            let targetWord = activePayloadTab === 'active' ? 'ОЖИДАЮЩИЕ' : 'ОБРАБОТАННЫЕ';
+            tg.showConfirm(`Удалить все ${targetWord} видео из списка?`, function(c) {
                 if(c) {
-                    appState.groups[appState.activeGroupIdx].videos = [];
-                    appState.preview_img = "";
+                    if (activePayloadTab === 'active') {
+                        appState.groups[appState.activeGroupIdx].videos = vids.filter(v => v.processed);
+                    } else {
+                        appState.groups[appState.activeGroupIdx].videos = vids.filter(v => !v.processed);
+                    }
                     saveStateLocally();
                     renderGroups();
                 }
@@ -562,13 +607,42 @@
 
         function renderVideosList(containerId) {
             let list = document.getElementById(containerId); list.innerHTML = "";
-            let vids = appState.groups[appState.activeGroupIdx].videos;
-            if(vids.length === 0) list.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Очередь пуста.</p>";
-            vids.forEach((v, i) => {
+            let allVids = appState.groups[appState.activeGroupIdx].videos;
+            
+            let activeCount = allVids.filter(v => !v.processed).length;
+            let doneCount = allVids.filter(v => v.processed).length;
+            
+            document.getElementById('btn_tab_q_active').innerText = `Ожидают (${activeCount})`;
+            document.getElementById('btn_tab_q_done').innerText = `Обработанные (${doneCount})`;
+            
+            let filteredVids = allVids.filter(v => activePayloadTab === 'done' ? v.processed : !v.processed);
+
+            if(filteredVids.length === 0) {
+                list.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>Список "${activePayloadTab === 'active' ? 'Ожидают' : 'Обработанные'}" пуст.</p>`;
+                return;
+            }
+
+            filteredVids.forEach((v) => {
+                let realIdx = allVids.indexOf(v); // НАХОДИМ РЕАЛЬНЫЙ ИНДЕКС В МАССИВЕ!
+                
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 let hasSettings = Object.keys(v.settings).length > 0;
-                let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${i})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${i})">❌</button>`;
-                list.innerHTML += `<div class="list-item"><span class="title"> ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-cyan)' : 'var(--text-muted)'};">${hasSettings ? '> custom_cfg' : '> global_cfg'}</small></span><div class="list-item-actions">${actionsHTML}</div></div>`;
+                let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
+                
+                let titleHtml = v.title ? `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:block;">${v.title}</b>` : '';
+                let statsHtml = v.title ? `<div class="stats-row"><span>👁 ${formatNum(v.views)}</span><span>👍 ${formatNum(v.likes)}</span><span>💬 ${formatNum(v.comments)}</span></div>` : '';
+                
+                list.innerHTML += `
+                <div class="list-item">
+                    <span class="title" style="white-space: normal;"> 
+                        ${titleHtml}
+                        ${statsHtml}
+                        <small style="color:${hasSettings ? 'var(--accent-cyan)' : 'var(--text-muted)'}; display:block; margin-top:2px;">
+                            ${hasSettings ? '> custom_cfg' : '> global_cfg'} | ${displayUrl}
+                        </small>
+                    </span>
+                    <div class="list-item-actions">${actionsHTML}</div>
+                </div>`;
             });
         }
 
@@ -691,25 +765,29 @@
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
         function sendToBot(action, extraData = null) {
-            let minimalState = { 
-                groups: appState.groups, 
-                activeGroupIdx: appState.activeGroupIdx 
-            };
+            // ФИЛЬТРУЕМ ОТПРАВЛЯЕМЫЕ ДАННЫЕ. ОСТАВЛЯЕМ ТОЛЬКО НУЖНОЕ (АКТИВНЫЕ ВИДЕО).
+            // Это гарантирует, что мы никогда не упремся в лимиты Телеграма.
+            let cleanGroups = appState.groups.map(g => ({
+                id: g.id,
+                config: g.config,
+                // Отправляем на рендер только НЕ обработанные видео
+                videos: g.videos.filter(v => !v.processed) 
+            }));
+
+            let minimalState = { groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx };
 
             if (action === 'render') {
-                let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
-                if (totalVids === 0) return tg.showAlert("Очередь пуста. Добавьте ссылки.");
+                let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
+                if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
                 
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // При отправке на рендер очищаем очередь сразу в Web App
-                let savedConfig = Object.assign({}, appState.groups[appState.activeGroupIdx].config);
-                appState.groups = [{id: 1, videos: [], config: savedConfig}]; 
-                appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
+                // При запуске рендера, видео остаются в памяти, мы их не удаляем,
+                // но бэкенд потом сам их добавит в history.json.
                 tg.close();
             } else if (action === 'vacuum') {
-                let payload = { action: action, state: minimalState, extra: extraData };
+                let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
             } else {
