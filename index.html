@@ -196,7 +196,7 @@
 
         <div class="section">
             <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0; border: none; padding: 0;">Список целей (Payload)</h3>
+                <h3 style="margin: 0; border: none; padding: 0;">Список целей</h3>
                 <button class="btn btn-danger" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="clearCurrentQueue()">🗑 Очистить все</button>
             </div>
             <div id="videos_list"></div>
@@ -408,19 +408,24 @@
             const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                if(data.images) appState.images = data.images;
-                if(data.prompts) appState.prompts = data.prompts;
-                if(data.templates) appState.templates = data.templates;
-                if(data.text_banners) appState.text_banners = data.text_banners;
                 
-                // РЕШЕНИЕ ПРОБЛЕМЫ С УДАЛЕНИЕМ ВИДЕО: ПРОВЕРЯЕМ УНИКАЛЬНЫЙ ID СИНХРОНИЗАЦИИ
-                if(data.force_sync && data.groups && data.sync_id !== localStorage.getItem('last_sync_id')) {
-                    appState.groups = data.groups;
-                    localStorage.setItem('last_sync_id', data.sync_id);
+                // Подтягиваем только картинки от бота (остальное Web App хранит сам!)
+                if(data.images) appState.images = data.images;
+                
+                // ИНКРЕМЕНТАЛЬНАЯ СИНХРОНИЗАЦИЯ: Добавляем ТОЛЬКО новые ссылки (решает проблему URI Too Long и бага с удалением)
+                if(data.new_urls && data.sync_id && data.sync_id.toString() !== localStorage.getItem('last_sync_id')) {
+                    data.new_urls.forEach(u => {
+                        appState.groups[appState.activeGroupIdx].videos.push({
+                            id: Math.random().toString(36).substr(2, 8), 
+                            source: u, 
+                            settings: {}
+                        });
+                    });
+                    localStorage.setItem('last_sync_id', data.sync_id.toString());
                     saveStateLocally();
                 }
             }
-        } catch(e) {}
+        } catch(e) { console.error("Data parse error", e); }
 
         if (!appState.lastQueueTab) appState.lastQueueTab = 'single';
 
@@ -543,10 +548,9 @@
             if(document.getElementById('view-groups').classList.contains('active')) renderGroups();
         }
 
-        // ФУНКЦИЯ ОЧИСТКИ ВСЕХ ВИДЕО В ГРУППЕ
         function clearCurrentQueue() {
             if(appState.groups[appState.activeGroupIdx].videos.length === 0) return;
-            tg.showConfirm("Удалить все видео из текущей очереди?", function(c) {
+            tg.showConfirm("Удалить ВСЕ видео из текущей очереди?", function(c) {
                 if(c) {
                     appState.groups[appState.activeGroupIdx].videos = [];
                     appState.preview_img = "";
@@ -694,11 +698,12 @@
 
             if (action === 'render') {
                 let totalVids = appState.groups.reduce((acc, g) => acc + g.videos.length, 0);
-                if (totalVids === 0) return tg.showAlert("NULL Payload. Add URLs first.");
+                if (totalVids === 0) return tg.showAlert("Очередь пуста. Добавьте ссылки.");
                 
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
+                // При отправке на рендер очищаем очередь сразу в Web App
                 let savedConfig = Object.assign({}, appState.groups[appState.activeGroupIdx].config);
                 appState.groups = [{id: 1, videos: [], config: savedConfig}]; 
                 appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
