@@ -7,132 +7,89 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* =========================================
-           СЮДА ВСТАВЛЯТЬ ССЫЛКИ НА ТВОИ КАРТИНКИ 
-           ========================================= */
+        /* ПИРАТСКАЯ КИБЕР-ТЕМА */
         :root {
-            /* ФОНЫ ДЛЯ РАЗНЫХ ВКЛАДОК */
-            --bg-ship: url('https://i.ibb.co/3sZ8X9T/ship-bg.jpg'); /* Фон главного меню (Корабль) */
-            --bg-map: url('https://i.ibb.co/L5Q1D0m/map-bg.jpg');   /* Фон настроек (Карта) */
-            --bg-cabin: url('https://i.ibb.co/9g5S88H/cabin-bg.jpg'); /* Фон очереди (Каюта) */
-            
-            /* ИКОНКИ (ПРОЗРАЧНЫЕ PNG) */
-            --icon-queue: url('https://img.icons8.com/color/96/kraken.png'); /* Осьминог */
-            --icon-visual: url('https://img.icons8.com/color/96/trident.png'); /* Трезубец */
-            --icon-indiv: url('https://img.icons8.com/color/96/compass.png'); /* Компас */
-            --icon-prompt: url('https://img.icons8.com/color/96/anchor.png'); /* Якорь-мозг */
-            --icon-tpl: url('https://img.icons8.com/color/96/scroll.png'); /* Свиток */
-            --icon-render: url('https://img.icons8.com/color/96/magic-crystal-ball.png'); /* Сфера */
-            
-            /* ЛОГОТИП В ШАПКУ */
-            --logo-main: url('https://img.icons8.com/color/96/pirate-flag.png');
-
-            /* ЦВЕТА */
-            --accent-main: #4facfe; /* Морской бирюзовый */
-            --accent-gold: #ffcc00; /* Пиратское золото */
-            --accent-danger: #ff4b4b;
-            --glass-bg: rgba(15, 20, 30, 0.65); /* Цвет матового стекла */
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-main: #0d0d0f;
+            --bg-card: #18181c;
+            --accent-main: #00ff88; 
+            --accent-danger: #ff3366;
+            --accent-gold: #ffcc00; 
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --border-color: #2a2a35;
         }
 
         body {
-            font-family: 'Inter', sans-serif; color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             margin: 0; padding: 0; user-select: none;
             -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
-            background-color: #050b14;
         }
         
-        h1, h2, h3, .header-title { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* АНИМИРОВАННЫЙ ЗАДНИЙ ФОН */
-        .dynamic-bg {
-            position: fixed; top: -5%; left: -5%; width: 110vw; height: 110vh;
-            background-image: var(--bg-ship); background-size: cover; background-position: center;
-            z-index: -3; transition: background-image 0.5s ease-in-out;
-            animation: sway 6s ease-in-out infinite alternate; /* Покачивание корабля */
+        h1, h2, h3, .header-title {
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        @keyframes sway {
-            0% { transform: rotate(-1.5deg) translateY(0px); }
-            100% { transform: rotate(1.5deg) translateY(15px); }
-        }
-
-        /* ДОЖДЬ И МОЛНИИ */
-        .weather-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -2;
-            background-image: repeating-linear-gradient(-15deg, transparent, transparent 15px, rgba(255,255,255,0.1) 15px, rgba(255,255,255,0.1) 16px);
-            background-size: 200px 1000px;
-            animation: rainDrop 0.4s linear infinite;
-        }
-        @keyframes rainDrop { 0% { background-position: 0 0; } 100% { background-position: 20px 1000px; } }
-
-        .lightning-flash {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1;
-            background: #fff; opacity: 0; mix-blend-mode: overlay;
-            animation: flash 9s infinite;
-        }
-        @keyframes flash {
-            0%, 93%, 96%, 100% { opacity: 0; }
-            94%, 98% { opacity: 0.4; }
-        }
-
-        /* HEADER (Матовое стекло) */
+        /* HEADER */
         .header {
-            padding: 15px; text-align: center; border-bottom: 1px solid var(--glass-border);
-            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; text-align: center; border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card); position: sticky; top: 0; z-index: 100; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,255,136,0.05);
         }
-        .header-title { 
-            font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.8); 
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .header-logo { width: 30px; height: 30px; background-image: var(--logo-main); background-size: contain; background-repeat: no-repeat;}
-        .back-btn { color: var(--accent-main); cursor: pointer; font-size: 14px; width: 60px; text-align: left; font-weight: 600; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
+        .header-title { font-size: 22px; font-weight: 700; color: var(--accent-main); text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+        .back-btn { color: var(--text-muted); cursor: pointer; font-size: 14px; width: 60px; text-align: left; font-weight: 600; text-transform: uppercase; }
         .header-spacer { width: 60px; }
         
         /* VIEWS */
         .view { display: none; padding: 15px; padding-bottom: 80px; }
-        .view.active { display: block; animation: viewFade 0.3s ease-out; }
-        @keyframes viewFade { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .view.active { display: block; animation: glitchIn 0.3s ease-out; }
         
-        /* HOME GRID (Кнопки меню) */
+        @keyframes glitchIn {
+            0% { opacity: 0; transform: scale(0.98) translateY(10px); filter: contrast(1.5) hue-rotate(90deg); }
+            50% { filter: contrast(1) hue-rotate(0deg); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        /* HOME GRID */
         .home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .app-icon {
-            background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border); border-radius: 12px; padding: 25px 10px; 
-            text-align: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 25px 10px; text-align: center; 
+            cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
         }
+        .app-icon::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(0,255,136,0.1), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .app-icon:active::before { left: 150%; }
         .app-icon:active { transform: scale(0.95); border-color: var(--accent-main); }
-        .app-icon .icon-img { 
-            width: 64px; height: 64px; margin: 0 auto 10px auto; background-size: contain; background-position: center; background-repeat: no-repeat;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
-        }
-        .app-icon span.label { font-size: 13px; font-weight: 700; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; color: #fff; text-shadow: 0 1px 3px #000;}
+        .app-icon span.emoji { font-size: 32px; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+        .app-icon span.label { font-size: 13px; font-weight: 600; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* FORMS & LISTS (Стекло) */
-        .section { 
-            background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; margin-bottom: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        h3 { margin-top: 0; font-size: 18px; margin-bottom: 15px; color: var(--accent-gold); border-bottom: 1px dashed rgba(255,204,0,0.3); padding-bottom: 8px; text-shadow: 0 2px 4px #000;}
+        /* FORMS & LISTS */
+        .section { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        h3 { margin-top: 0; font-size: 18px; margin-bottom: 15px; color: var(--accent-gold); border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
         .form-group { margin-bottom: 15px; }
         .form-group:last-child { margin-bottom: 0; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12px; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 1px 2px #000;}
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
         
         select, input[type="text"], input[type="url"] {
-            width: 100%; padding: 12px; box-sizing: border-box; background-color: rgba(0,0,0,0.5); 
-            color: #fff; border: 1px solid var(--glass-border); 
-            border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;
+            width: 100%; padding: 12px; box-sizing: border-box; background-color: #000; 
+            color: var(--text-main); border: 1px solid var(--border-color); 
+            border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;
             font-family: 'Inter', sans-serif;
         }
-        select:focus, input[type="text"]:focus, input[type="url"]:focus { border-color: var(--accent-main); box-shadow: 0 0 8px rgba(79,172,254,0.3); }
+        select:focus, input[type="text"]:focus, input[type="url"]:focus { border-color: var(--accent-main); box-shadow: 0 0 8px rgba(0,255,136,0.2); }
         
         /* SLIDERS */
         input[type="range"] { 
-            -webkit-appearance: none; width: 100%; height: 6px; background: rgba(0,0,0,0.5); 
-            border-radius: 3px; outline: none; border: 1px solid var(--glass-border); margin-top: 8px;
+            -webkit-appearance: none; width: 100%; height: 6px; background: #000; 
+            border-radius: 3px; outline: none; border: 1px solid var(--border-color); margin-top: 8px;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
@@ -141,21 +98,20 @@
         }
         
         /* VISUAL EDITOR */
-        .visual-editor-card { background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); margin-bottom: 15px; }
         .preview-container {
             width: 160px; height: 284px; background-color: #000; background-size: cover; background-position: center;
-            margin: 0 auto 15px auto; border-radius: 8px; position: relative; overflow: hidden;
-            border: 2px solid var(--accent-main); box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            margin: 0 auto 15px auto; border-radius: 6px; position: relative; overflow: hidden;
+            border: 2px solid var(--border-color); box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         .preview-placeholder {
             position: absolute; top: 50%; left: 0; width: 100%; text-align: center;
-            color: #888; font-size: 12px; transform: translateY(-50%); z-index: 0;
+            color: var(--text-muted); font-size: 12px; transform: translateY(-50%); z-index: 0;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .preview-blur {
             position: absolute; width: 100%; left: 0; background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1; 
-            border-top: 1px solid rgba(79,172,254,0.3); border-bottom: 1px solid rgba(79,172,254,0.3);
+            border-top: 1px solid rgba(0,255,136,0.3); border-bottom: 1px solid rgba(0,255,136,0.3);
         }
         .preview-subs {
             position: absolute; width: 100%; text-align: center; color: var(--accent-gold); font-weight: 800; 
@@ -168,75 +124,66 @@
             z-index: 3; pointer-events: none; line-height: 1.1; white-space: pre-wrap; font-family: 'Inter', sans-serif;
         }
 
+        /* SPINNER */
         .spinner {
-            width: 20px; height: 20px; border: 2px solid var(--glass-border);
+            width: 20px; height: 20px; border: 2px solid var(--border-color);
             border-radius: 50%; border-top-color: var(--accent-main); animation: spin 1s linear infinite; margin-bottom: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         /* TABS UI */
-        .tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 4px; border: 1px solid var(--glass-border); }
+        .tabs { display: flex; margin-bottom: 15px; background: #000; border-radius: 6px; padding: 3px; border: 1px solid var(--border-color); }
         .tab-btn {
-            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; 
-            border-radius: 6px; transition: 0.2s; color: #888; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
+            flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; 
+            border-radius: 4px; transition: 0.2s; color: var(--text-muted); text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
         }
-        .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); border: 1px solid var(--glass-border);}
+        .tab-btn.active { background: var(--border-color); color: var(--accent-main); }
         .tab-content { display: none; padding: 5px 0; }
         .tab-content.active { display: block; animation: fadeIn 0.2s; }
 
         /* BUTTONS */
         .btn {
-            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.2) 100%); color: #fff;
-            border: 1px solid var(--glass-border); padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: bold;
+            background-color: var(--border-color); color: var(--text-main);
+            border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 6px; font-size: 14px; font-weight: bold;
             cursor: pointer; width: 100%; margin-bottom: 10px; transition: all 0.2s; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
-            backdrop-filter: blur(5px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .btn:active { transform: scale(0.98); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
-        .btn-primary { background: rgba(79,172,254,0.2); border-color: var(--accent-main); color: var(--accent-main); }
-        .btn-danger { background: rgba(255,75,75,0.2); border-color: var(--accent-danger); color: #ff8888; }
-        .btn-success { background: rgba(255,204,0,0.2); border-color: var(--accent-gold); color: var(--accent-gold); }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: rgba(0,255,136,0.1); border-color: var(--accent-main); color: var(--accent-main); }
+        .btn-danger { background-color: rgba(255,51,102,0.1); border-color: var(--accent-danger); color: var(--accent-danger); }
+        .btn-success { background-color: rgba(255,204,0,0.1); border-color: var(--accent-gold); color: var(--accent-gold); }
         
+        /* LIST ITEMS */
         .list-item {
-            background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-bottom: 10px; 
-            display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border);
+            background: #000; padding: 12px; border-radius: 6px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);
         }
-        .list-item span.title { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; color: #fff; text-shadow: 0 1px 2px #000;}
+        .list-item span.title { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; color: var(--text-main); }
         .list-item-actions { display: flex; gap: 5px; }
-        .list-item button { padding: 6px 10px; font-size: 14px; margin: 0; width: auto; border-radius: 6px; }
+        .list-item button { padding: 6px 10px; font-size: 14px; margin: 0; width: auto; border-radius: 4px; }
         
         .hidden { display: none !important; }
         .flex-row { display: flex; gap: 8px; align-items: center; }
         .flex-row input, .flex-row select { flex-grow: 1; margin-bottom: 0; }
         .flex-row button { width: auto; margin-bottom: 0; white-space: nowrap; }
-        hr.divider { border: 0; border-top: 1px dashed var(--glass-border); margin: 15px 0; }
     </style>
 </head>
 <body>
 
-    <div class="dynamic-bg" id="main_bg"></div>
-    <div class="weather-overlay"></div>
-    <div class="lightning-flash"></div>
-
     <div id="view-home" class="view active">
         <div class="header">
-            <span class="header-spacer"></span>
-            <span class="header-title"><div class="header-logo"></div> ContentHijacker</span>
-            <span class="header-spacer"></span>
+            <span class="header-spacer"></span><span class="header-title">🏴‍☠️ ContentHijacker</span><span class="header-spacer"></span>
         </div>
-        <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-main); box-shadow: inset 0 0 20px rgba(79,172,254,0.1);">
-            <p style="margin: 0; font-size: 15px; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; text-shadow: 0 2px 4px #000;">Активный Флот (Группа): <b id="home_active_group_label" style="color: var(--accent-gold); font-size: 20px;">1</b></p>
-            <p style="margin: 5px 0 0 0; font-size: 13px; color: #ccc; text-shadow: 0 1px 2px #000;">Захвачено видео: <b id="home_videos_count" style="color: #fff;">0</b></p>
+        <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-main); box-shadow: inset 0 0 20px rgba(0,255,136,0.05);">
+            <p style="margin: 0; font-size: 15px; text-transform: uppercase; font-family: 'Rajdhani', sans-serif;">Активный Флот (Группа): <b id="home_active_group_label" style="color: var(--accent-main); font-size: 18px;">1</b></p>
+            <p style="margin: 5px 0 0 0; font-size: 13px; color: var(--text-muted);">Захвачено видео: <b id="home_videos_count" style="color: #fff;">0</b></p>
         </div>
         <div class="home-grid">
-            <div class="app-icon" onclick="showView('view-groups')"><div class="icon-img" style="background-image: var(--icon-queue);"></div><span class="label">Очередь Видео</span></div>
-            <div class="app-icon" onclick="openVisuals('global')"><div class="icon-img" style="background-image: var(--icon-visual);"></div><span class="label">Визуал Группы</span></div>
-            <div class="app-icon" onclick="showView('view-individual')"><div class="icon-img" style="background-image: var(--icon-indiv);"></div><span class="label">Точечная Настройка</span></div>
-            <div class="app-icon" onclick="showView('view-prompts')"><div class="icon-img" style="background-image: var(--icon-prompt);"></div><span class="label">Промпты GPT</span></div>
-            <div class="app-icon" onclick="showView('view-templates')"><div class="icon-img" style="background-image: var(--icon-tpl);"></div><span class="label">Шаблоны</span></div>
-            <div class="app-icon" style="background: rgba(255,75,75,0.15); border-color: var(--accent-danger);" onclick="sendToBot('render')">
-                <div class="icon-img" style="background-image: var(--icon-render);"></div>
-                <span class="label" style="color: #ff8888;">ЗАПУСТИТЬ РЕНДЕР</span>
-            </div>
+            <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь Видео</span></div>
+            <div class="app-icon" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Визуал Группы</span></div>
+            <div class="app-icon" onclick="showView('view-individual')"><span class="emoji">🎯</span><span class="label">Точечная Настройка</span></div>
+            <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты GPT</span></div>
+            <div class="app-icon" onclick="showView('view-templates')"><span class="emoji">💾</span><span class="label">Шаблоны</span></div>
+            <div class="app-icon" style="background: rgba(255,51,102,0.1); border-color: var(--accent-danger);" onclick="sendToBot('render')"><span class="emoji">🔥</span><span class="label" style="color: var(--accent-danger);">ЗАПУСТИТЬ РЕНДЕР</span></div>
         </div>
     </div>
 
@@ -254,13 +201,13 @@
         <div class="section">
             <h3>Добавить цель (Видео)</h3>
             <div class="flex-row">
-                <input type="url" id="new_video_url" placeholder="Ссылка (YouTube/TikTok/Insta)...">
+                <input type="url" id="new_video_url" placeholder="Ссылка (YouTube/TikTok)...">
                 <button class="btn btn-primary" onclick="addVideo()">➕</button>
             </div>
         </div>
         <div class="section">
             <h3>Список видео в группе</h3>
-            <p style="font-size: 11px; color: #aaa; margin-top: -10px; text-shadow: 0 1px 2px #000;">Нажмите 👁 для быстрого просмотра кадра</p>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: -10px;">Нажмите 👁 для загрузки кадра в редактор</p>
             <div id="videos_list"></div>
         </div>
     </div>
@@ -359,13 +306,14 @@
                             <button class="btn btn-danger" onclick="deleteImageBanner()" title="Удалить">🗑</button>
                         </div>
                     </div>
-                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">📸 Загрузить новую</button>
+                    <button class="btn btn-primary" style="margin-bottom: 0;" onclick="goToBotForImage()">📸 Загрузить новую в чате</button>
                 </div>
             </div>
         </div>
 
         <div class="section">
             <h3>Логика и Нейросети</h3>
+            
             <div class="form-group" style="border: 1px solid var(--accent-gold); padding: 10px; border-radius: 8px; background: rgba(255,204,0,0.05);">
                 <label style="color: var(--accent-gold);">Язык перевода (Озвучка и Сабы)</label>
                 <select id="target_language" class="auto-save-input">
@@ -378,6 +326,7 @@
                     <option value="hi">🇮🇳 Хинди</option>
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Тематика сленга (GPT)</label>
                 <select id="theme" class="auto-save-input">
@@ -411,7 +360,7 @@
         <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Точечная Настройка</span><span class="header-spacer"></span></div>
         <div class="section">
             <h3>Видео в активной группе</h3>
-            <p style="font-size: 12px; color: #aaa;">Выберите конкретное видео, чтобы задать ему персональные настройки блюра или баннера.</p>
+            <p style="font-size: 12px; color: var(--text-muted);">Выберите конкретное видео, чтобы задать ему персональные настройки блюра или баннера.</p>
             <div id="indiv_videos_list"></div>
         </div>
     </div>
@@ -435,7 +384,7 @@
     <div id="view-templates" class="view">
         <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Назад</span><span class="header-title">Шаблоны</span><span class="header-spacer"></span></div>
         <div class="section">
-            <h3>Сохранить настройки</h3>
+            <h3>Сохранить текущие настройки</h3>
             <div class="flex-row">
                 <input type="text" id="new_tpl_name" placeholder="Имя шаблона...">
                 <button class="btn btn-success" onclick="saveTemplate()">💾</button>
@@ -451,8 +400,9 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); 
         tg.setHeaderColor('#18181c');
-        tg.setBackgroundColor('#050b14');
+        tg.setBackgroundColor('#0d0d0f');
         
+        // Словарь для перевода слова СУБТИТРЫ на предпросмотре
         const subTranslations = {
             "ru": "СУБТИТРЫ", "en": "SUBTITLES", "es": "SUBTÍTULOS", 
             "fr": "SOUS-TITRES", "de": "UNTERTITEL", "ar": "ترجمة", "hi": "उपशीर्षक"
@@ -488,18 +438,6 @@
 
         function saveStateLocally() { localStorage.setItem('contentHijackerState', JSON.stringify(appState)); }
 
-        // ДИНАМИЧЕСКАЯ СМЕНА ФОНА
-        function setAppBackground(viewId) {
-            const bgElement = document.getElementById('main_bg');
-            if(viewId === 'view-home' || viewId === 'view-settings' || viewId === 'view-individual') {
-                bgElement.style.backgroundImage = 'var(--bg-ship)';
-            } else if (viewId === 'view-groups') {
-                bgElement.style.backgroundImage = 'var(--bg-cabin)';
-            } else {
-                bgElement.style.backgroundImage = 'var(--bg-map)';
-            }
-        }
-
         function switchVisualTab(tabId) {
             document.getElementById('tab_blur').classList.remove('active');
             document.getElementById('tab_banner').classList.remove('active');
@@ -534,8 +472,6 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             window.scrollTo(0, 0); 
-            setAppBackground(viewId);
-            
             if(viewId === 'view-home') renderHome();
             if(viewId === 'view-groups') renderGroups();
             if(viewId === 'view-individual') renderIndiv();
@@ -571,6 +507,7 @@
         }
         function deleteGroup() { if(appState.groups.length <= 1) return tg.showAlert("Нельзя удалить последнюю!"); appState.groups.splice(appState.activeGroupIdx, 1); appState.activeGroupIdx = Math.max(0, appState.activeGroupIdx - 1); saveStateLocally(); renderGroups(); }
 
+        // --- ЛОКАЛЬНЫЙ ПАРСЕР ПРЕВЬЮ БЕЗ БОТА ---
         async function fetchPreviewLocal(url) {
             try {
                 let ytMatch = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([0-9A-Za-z_-]{11})/);
@@ -628,7 +565,7 @@
         function renderVideosList(containerId) {
             let list = document.getElementById(containerId); list.innerHTML = "";
             let vids = appState.groups[appState.activeGroupIdx].videos;
-            if(vids.length === 0) list.innerHTML = "<p style='color:#888; text-align:center;'>Очередь пуста.</p>";
+            if(vids.length === 0) list.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Очередь пуста.</p>";
             vids.forEach((v, i) => {
                 let displayUrl = v.source.length > 25 ? v.source.substring(0, 25) + '...' : v.source;
                 let hasSettings = Object.keys(v.settings).length > 0;
@@ -643,7 +580,7 @@
                 }
 
                 list.innerHTML += `<div class="list-item">
-                    <span class="title">🎬 ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-gold)' : '#888'};">${hasSettings ? '⚠️ Кастом' : 'Глобал'}</small></span>
+                    <span class="title">🎬 ${displayUrl}<br><small style="color:${hasSettings ? 'var(--accent-gold)' : 'var(--text-muted)'};">${hasSettings ? '⚠️ Кастом' : 'Глобал'}</small></span>
                     <div class="list-item-actions">${actionsHTML}</div>
                 </div>`;
             });
@@ -714,6 +651,7 @@
             }
         }
 
+        // РЕДАКТОР ВИЗУАЛА
         function openVisuals(target) {
             editingTarget = target;
             let conf = {};
@@ -844,10 +782,11 @@
         function renderIndiv() { renderVideosList('indiv_videos_list'); }
         function resetIndiv(idx) { appState.groups[appState.activeGroupIdx].videos[idx].settings = {}; saveStateLocally(); renderIndiv(); }
 
+        // --- PROMPTS & TEMPLATES ---
         function renderPrompts() {
             document.getElementById("active_prompt").value = appState.groups[appState.activeGroupIdx].config.prompt_text_content || "";
             let list = document.getElementById("prompts_list"); list.innerHTML = "";
-            if (appState.prompts.length === 0) list.innerHTML = "<p style='color:#888;'>База пуста.</p>";
+            if (appState.prompts.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>База пуста.</p>";
             appState.prompts.forEach((p, i) => { list.innerHTML += `<div class="list-item"><span class="title">${p}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delPrompt(${i})">❌</button><button class="btn btn-primary" onclick="selPrompt(${i})">Выбрать</button></div></div>`; });
         }
         function addPrompt() { let t = document.getElementById("new_prompt_text").value.trim(); if(t) { appState.prompts.push(t); document.getElementById("new_prompt_text").value = ""; saveStateLocally(); renderPrompts(); } }
@@ -857,7 +796,7 @@
         function renderTemplates() {
             let list = document.getElementById("templates_list"); list.innerHTML = "";
             let keys = Object.keys(appState.templates);
-            if (keys.length === 0) list.innerHTML = "<p style='color:#888;'>Нет шаблонов.</p>";
+            if (keys.length === 0) list.innerHTML = "<p style='color:var(--text-muted);'>Нет шаблонов.</p>";
             for (let name in appState.templates) { list.innerHTML += `<div class="list-item"><span class="title">📂 ${name}</span><div class="list-item-actions"><button class="btn btn-danger" onclick="delTemplate('${name}')">❌</button><button class="btn btn-primary" onclick="applyTemplate('${name}')">Загрузить</button></div></div>`; }
         }
         function saveTemplate() { let name = document.getElementById("new_tpl_name").value.trim(); if(name) { appState.templates[name] = Object.assign({}, appState.groups[appState.activeGroupIdx].config); document.getElementById("new_tpl_name").value = ""; saveStateLocally(); renderTemplates(); tg.showAlert(`Шаблон сохранен!`); } }
@@ -872,6 +811,7 @@
                 let payload = { action: action, state: appState };
                 tg.sendData(JSON.stringify(payload));
                 
+                // ПОЛНАЯ ОЧИСТКА ПАМЯТИ ПОСЛЕ РЕНДЕРА
                 appState.groups = [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}];
                 appState.activeGroupIdx = 0;
                 appState.preview_img = "";
@@ -884,7 +824,6 @@
             }
         }
 
-        // Запуск
         showView('view-home');
     </script>
 </body>
