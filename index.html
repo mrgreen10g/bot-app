@@ -195,7 +195,10 @@
         </div>
 
         <div class="section">
-            <h3>Список целей (Payload)</h3>
+            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; border: none; padding: 0;">Список целей (Payload)</h3>
+                <button class="btn btn-danger" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="clearCurrentQueue()">🗑 Очистить все</button>
+            </div>
             <div id="videos_list"></div>
         </div>
     </div>
@@ -394,7 +397,7 @@
         let appState = { 
             groups: [{id: 1, videos: [], config: Object.assign({}, DEFAULT_CONFIG)}], 
             activeGroupIdx: 0, prompts: [], templates: {}, images: [], text_banners: [], preview_img: "",
-            lastQueueTab: 'single' // СОХРАНЕНИЕ ВЫБРАННОЙ ВКЛАДКИ
+            lastQueueTab: 'single'
         };
         let editingTarget = 'global'; 
 
@@ -410,15 +413,15 @@
                 if(data.templates) appState.templates = data.templates;
                 if(data.text_banners) appState.text_banners = data.text_banners;
                 
-                // ВАЖНО: СИНХРОНИЗАЦИЯ ПОСЛЕ ПАРСЕРА
-                if(data.force_sync && data.groups) {
+                // РЕШЕНИЕ ПРОБЛЕМЫ С УДАЛЕНИЕМ ВИДЕО: ПРОВЕРЯЕМ УНИКАЛЬНЫЙ ID СИНХРОНИЗАЦИИ
+                if(data.force_sync && data.groups && data.sync_id !== localStorage.getItem('last_sync_id')) {
                     appState.groups = data.groups;
+                    localStorage.setItem('last_sync_id', data.sync_id);
                     saveStateLocally();
                 }
             }
         } catch(e) {}
 
-        // Устанавливаем дефолтное значение вкладки, если его нет
         if (!appState.lastQueueTab) appState.lastQueueTab = 'single';
 
         function saveStateLocally() { localStorage.setItem('hijackerV2State', JSON.stringify(appState)); }
@@ -427,10 +430,7 @@
             document.getElementById('tab_single').classList.remove('active'); document.getElementById('tab_mass').classList.remove('active');
             document.getElementById('btn_tab_single').classList.remove('active'); document.getElementById('btn_tab_mass').classList.remove('active');
             document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
-            
-            // СОХРАНЯЕМ ВЫБОР ВКЛАДКИ
-            appState.lastQueueTab = tabId;
-            saveStateLocally();
+            appState.lastQueueTab = tabId; saveStateLocally();
         }
 
         function switchVisualTab(tabId) {
@@ -482,8 +482,6 @@
                 if(i === appState.activeGroupIdx) opt.selected = true; sel.appendChild(opt);
             });
             renderVideosList('videos_list');
-            
-            // ПРИМЕНЯЕМ СОХРАНЕННУЮ ВКЛАДКУ
             switchQueueTab(appState.lastQueueTab);
         }
 
@@ -543,6 +541,19 @@
             if (appState.groups[appState.activeGroupIdx].videos.length === 0) appState.preview_img = ""; 
             saveStateLocally(); 
             if(document.getElementById('view-groups').classList.contains('active')) renderGroups();
+        }
+
+        // ФУНКЦИЯ ОЧИСТКИ ВСЕХ ВИДЕО В ГРУППЕ
+        function clearCurrentQueue() {
+            if(appState.groups[appState.activeGroupIdx].videos.length === 0) return;
+            tg.showConfirm("Удалить все видео из текущей очереди?", function(c) {
+                if(c) {
+                    appState.groups[appState.activeGroupIdx].videos = [];
+                    appState.preview_img = "";
+                    saveStateLocally();
+                    renderGroups();
+                }
+            });
         }
 
         function renderVideosList(containerId) {
@@ -676,7 +687,6 @@
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
         function sendToBot(action, extraData = null) {
-            // ФИКС ТИХОГО СБРОСА ОТ ТЕЛЕГРАМ: Очищаем вес payload перед отправкой
             let minimalState = { 
                 groups: appState.groups, 
                 activeGroupIdx: appState.activeGroupIdx 
@@ -694,7 +704,6 @@
                 appState.activeGroupIdx = 0; appState.preview_img = ""; saveStateLocally();
                 tg.close();
             } else if (action === 'vacuum') {
-                // ДЛЯ ПАРСЕРА ПЕРЕДАЕМ ТОЛЬКО ОЧЕРЕДЬ, ЧТОБЫ ВЛЕЗТЬ В 4096 БАЙТ
                 let payload = { action: action, state: minimalState, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
