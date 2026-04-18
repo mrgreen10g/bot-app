@@ -133,6 +133,7 @@
         <div class="section" style="text-align:center; padding: 15px; border-color: var(--accent-green);">
             <p style="margin: 0; font-size: 13px; text-transform: uppercase;">СЕССИЯ ЗАХВАТА: <b id="home_active_group_label" style="color: var(--accent-green); font-size: 18px;">1</b></p>
             <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Ожидает рендера: <b id="home_videos_count" style="color: var(--accent-cyan);">0</b></p>
+            <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Обработанные: <b id="home_processed_count" style="color: var(--accent-danger);">0</b></p>
         </div>
         <div class="home-list">
             <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь (URL)</span></div>
@@ -488,10 +489,14 @@
         function saveStateLocally() { 
             localStorage.setItem('hijackerV2State', JSON.stringify(appState)); 
             
-            // ИСПРАВЛЕНИЕ: Мгновенное обновление счетчиков на главной
+            // Обновляем оба счетчика в реальном времени
             if(document.getElementById('home_videos_count') && appState.groups[appState.activeGroupIdx]) {
                 let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
+                let processedCount = appState.groups[appState.activeGroupIdx].videos.filter(v => v.processed).length;
                 document.getElementById('home_videos_count').innerText = activeCount;
+                if(document.getElementById('home_processed_count')) {
+                    document.getElementById('home_processed_count').innerText = processedCount;
+                }
             }
         }
 
@@ -549,7 +554,11 @@
         function renderHome() {
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
             let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
+            let processedCount = appState.groups[appState.activeGroupIdx].videos.filter(v => v.processed).length;
             document.getElementById('home_videos_count').innerText = activeCount;
+            if(document.getElementById('home_processed_count')) {
+                document.getElementById('home_processed_count').innerText = processedCount;
+            }
             tg.MainButton.hide();
         }
 
@@ -706,12 +715,24 @@
         function deleteImageBanner() {
             let idx = document.getElementById("img_selector").value;
             if (idx !== "") {
-                // ИСПРАВЛЕНИЕ: Отправляем команду save для синхронизации с бэкендом
-                tg.showConfirm("Удалить баннер навсегда? Терминал будет закрыт для сохранения на сервере.", function(c) {
+                tg.showConfirm("Удалить баннер навсегда?", function(c) {
                     if (c) {
+                        // Бесшовное удаление (без отправки команды save и закрытия)
                         appState.images.splice(idx, 1);
-                        saveStateLocally();
-                        sendToBot('save');
+                        saveStateLocally(); 
+                        
+                        let imgSelect = document.getElementById("img_selector"); 
+                        imgSelect.innerHTML = "<option value=''>-- Null --</option>";
+                        if (appState.images.length > 0) { 
+                            appState.images.forEach((imgObj, index) => { 
+                                let opt = document.createElement('option'); 
+                                opt.value = index; 
+                                opt.innerHTML = "🖼 " + imgObj.name; 
+                                imgSelect.appendChild(opt); 
+                            }); 
+                        }
+                        updateStateFromUI(); 
+                        updatePreview();
                     }
                 });
             }
@@ -809,7 +830,8 @@
                 let imgIdx = parseInt(imgIdxStr);
                 
                 if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url) { 
-                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
+                    let safeName = appState.images[imgIdx].name.replace(/'/g, "");
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'border:1px solid var(--accent-green); padding:10px; background:rgba(0,0,0,0.8); color:var(--accent-green); font-size:12px; font-weight:bold; line-height: 1.2;\\'>🖼 БАННЕР<br><span style=\\'font-size:9px; color:white;\\'>${safeName}</span></div>';" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
                 } else { 
                     bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; 
                 }
@@ -842,7 +864,6 @@
                 videos: g.videos.filter(v => !v.processed) 
             }));
 
-            // ИСПРАВЛЕНИЕ: Добавлены все списки в минимальный стейт для сохранения
             let minimalState = { 
                 groups: cleanGroups, 
                 activeGroupIdx: appState.activeGroupIdx,
