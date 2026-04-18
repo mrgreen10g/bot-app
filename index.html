@@ -168,10 +168,14 @@
             </div>
 
             <div id="tab_single" class="tab-content active">
-                <div class="flex-row">
+                <div class="flex-row" style="margin-bottom: 10px;">
                     <input type="url" id="new_video_url" placeholder="URL (YouTube/TikTok)...">
-                    <button class="btn btn-primary" onclick="addVideoLocal()">Inject</button>
+                    <button class="btn btn-primary" onclick="addVideoLocal()">Добавить</button>
                 </div>
+                <button class="btn btn-secondary" onclick="syncSingleVideos()" style="background: rgba(255, 170, 0, 0.1); border-color: var(--accent-warn); color: var(--accent-warn); width: 100%; margin-bottom: 0;">
+                    🔄 Получить данные (YT/TikTok)
+                </button>
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px; margin-bottom: 0; text-align: center;">Добавьте ссылки, затем нажмите кнопку для выгрузки названий через парсер бота.</p>
             </div>
 
             <div id="tab_mass" class="tab-content">
@@ -424,8 +428,18 @@
                         else if (u.startsWith("yts:")) u = "https://www.youtube.com/shorts/" + u.substring(4);
                         else if (u.startsWith("tt:")) u = "https://www.tiktok.com/" + u.substring(3);
                         
-                        let exists = appState.groups[appState.activeGroupIdx].videos.find(vid => vid.source === u);
-                        if (!exists) {
+                        let isUpdated = false;
+                        appState.groups.forEach(g => {
+                            let existingVids = g.videos.filter(vid => vid.source === u || vid.source.includes(u.split('?')[0]));
+                            existingVids.forEach(vid => {
+                                vid.title = arr[1];
+                                vid.views = arr[2];
+                                vid.processed = arr[3] === 1;
+                                isUpdated = true;
+                            });
+                        });
+
+                        if (!isUpdated && appState.groups[appState.activeGroupIdx]) {
                             appState.groups[appState.activeGroupIdx].videos.push({
                                 id: Math.random().toString(36).substr(2, 8), 
                                 source: u, 
@@ -549,46 +563,15 @@
             return "";
         }
 
-        async function fetchTitleAsync(cleanUrl, vidId, groupIdx) {
-            let title = "Manual Inject URL";
-            try {
-                if (cleanUrl.includes("tiktok.com") || cleanUrl.includes("douyin.com")) {
-                    let res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}`);
-                    let json = await res.json();
-                    if (json.data && json.data.title) title = json.data.title.substring(0, 75); // Жесткий лимит 75 символов
-                } else if (cleanUrl.includes("youtube.com") || cleanUrl.includes("youtu.be")) {
-                    // Конвертируем shorts в watch для обхода ошибок 404 у oembed
-                    let oembedUrl = cleanUrl.replace('/shorts/', '/watch?v=');
-                    let res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + oembedUrl + '&format=json')}`);
-                    let json = await res.json();
-                    let ytData = JSON.parse(json.contents);
-                    if (ytData && ytData.title) title = ytData.title.substring(0, 75); // Жесткий лимит 75 символов
-                }
-            } catch (e) { console.log("Fetch error", e); }
-
-            if(appState.groups[groupIdx]) {
-                let v = appState.groups[groupIdx].videos.find(x => x.id === vidId);
-                if(v) { 
-                    v.title = title; 
-                    saveStateLocally(); 
-                    if(appState.activeGroupIdx === groupIdx && document.getElementById('view-groups').classList.contains('active')) {
-                        renderGroups();
-                    }
-                }
-            }
-        }
-
         function addVideoLocal() {
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
             
-            let cleanUrl = url.split(/[?#]/)[0];
-            let vidId = Math.random().toString(36).substr(2, 8);
-
+            // Сразу добавляем в стейт локально и ждем синхронизации
             appState.groups[appState.activeGroupIdx].videos.push({
-                id: vidId, 
+                id: Math.random().toString(36).substr(2, 8), 
                 source: url, 
-                title: "⏳ Получение данных...",
+                title: "⏳ Ожидает синхронизации...",
                 views: null, 
                 processed: false,
                 settings: {}
@@ -597,9 +580,30 @@
             document.getElementById("new_video_url").value = "";
             saveStateLocally(); 
             renderGroups(); 
-            tg.showAlert("✅ Ссылка добавлена!");
+            tg.showAlert("✅ Ссылка добавлена в очередь!");
+        }
 
-            fetchTitleAsync(cleanUrl, vidId, appState.activeGroupIdx);
+        function syncSingleVideos() {
+            let urlsToSync = [];
+            appState.groups.forEach(g => {
+                g.videos.forEach(v => {
+                    if (v.title === "⏳ Ожидает синхронизации..." || v.title === "Manual Inject URL") {
+                        urlsToSync.push(v.source);
+                    }
+                });
+            });
+
+            if (urlsToSync.length === 0) {
+                return tg.showAlert("Все добавленные видео уже синхронизированы!");
+            }
+
+            // Ограничение по размеру пакета, чтобы не вешать бота
+            if (urlsToSync.length > 20) {
+                urlsToSync = urlsToSync.slice(0, 20);
+                tg.showAlert("Отправлено 20 ссылок на синхронизацию. Остальные синхронизируйте позже.");
+            }
+
+            sendToBot('sync_urls', {urls: urlsToSync});
         }
         
         function deleteVideo(realIdx) { 
@@ -767,10 +771,9 @@
                 let imgIdxStr = document.getElementById("img_selector").value;
                 let imgIdx = parseInt(imgIdxStr);
                 
-                // Если картинка не может загрузиться из-за CORS или протухшей ссылки ТГ, покажем красивую зеленую заглушку
+                // Рендерим картинку напрямую (ТГ ссылки теперь будут всегда свежими)
                 if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url) { 
-                    let safeName = appState.images[imgIdx].name.replace(/'/g, "");
-                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'border:1px solid var(--accent-green); padding:10px; background:rgba(0,0,0,0.8); color:var(--accent-green); font-size:12px; font-weight:bold; line-height: 1.2;\\'>🖼 БАННЕР<br><span style=\\'font-size:9px; color:white;\\'>${safeName}</span></div>';" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
                 } else { 
                     bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; 
                 }
@@ -816,7 +819,7 @@
                 appState.preview_img = "";
                 saveStateLocally();
                 tg.close();
-            } else if (action === 'vacuum') {
+            } else if (action === 'vacuum' || action === 'sync_urls') {
                 let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
