@@ -567,7 +567,6 @@
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
             
-            // Сразу добавляем в стейт локально и ждем синхронизации
             appState.groups[appState.activeGroupIdx].videos.push({
                 id: Math.random().toString(36).substr(2, 8), 
                 source: url, 
@@ -597,7 +596,6 @@
                 return tg.showAlert("Все добавленные видео уже синхронизированы!");
             }
 
-            // Ограничение по размеру пакета, чтобы не вешать бота
             if (urlsToSync.length > 20) {
                 urlsToSync = urlsToSync.slice(0, 20);
                 tg.showAlert("Отправлено 20 ссылок на синхронизацию. Остальные синхронизируйте позже.");
@@ -771,7 +769,6 @@
                 let imgIdxStr = document.getElementById("img_selector").value;
                 let imgIdx = parseInt(imgIdxStr);
                 
-                // Рендерим картинку напрямую (ТГ ссылки теперь будут всегда свежими)
                 if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url) { 
                     bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
                 } else { 
