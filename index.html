@@ -421,14 +421,12 @@
                 
                 if(data.images) appState.images = data.images;
                 
-                // РАСШИРЕННАЯ ЛОГИКА АНТИ-ДУБЛЕЙ
                 if(data.n && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.n.forEach(arr => {
                         let u = arr[0];
                         let decompressedUrl = u;
                         let matchKey = null;
 
-                        // Распаковка и получение ключа
                         if (u.startsWith("yt:")) {
                             matchKey = u.substring(3);
                             decompressedUrl = "https://www.youtube.com/watch?v=" + matchKey;
@@ -449,15 +447,12 @@
                                 if (!vid.source) return false;
                                 let s = vid.source;
                                 
-                                // 1. Точное совпадение
                                 if (s === decompressedUrl) return true;
                                 
-                                // 2. Совпадение без http/www и параметров
                                 let cleanS = s.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
                                 let cleanD = decompressedUrl.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
                                 if (cleanS === cleanD) return true;
                                 
-                                // 3. Совпадение по уникальному ID видео (самый надежный)
                                 if (matchKey && matchKey.length > 5 && s.includes(matchKey)) return true;
                                 
                                 return false;
@@ -471,7 +466,6 @@
                             });
                         });
 
-                        // Если не нашли старое - только тогда добавляем новое
                         if (!isUpdated && appState.groups[appState.activeGroupIdx]) {
                             appState.groups[appState.activeGroupIdx].videos.push({
                                 id: Math.random().toString(36).substr(2, 8), 
@@ -491,7 +485,15 @@
 
         if (!appState.lastQueueTab) appState.lastQueueTab = 'single';
 
-        function saveStateLocally() { localStorage.setItem('hijackerV2State', JSON.stringify(appState)); }
+        function saveStateLocally() { 
+            localStorage.setItem('hijackerV2State', JSON.stringify(appState)); 
+            
+            // ИСПРАВЛЕНИЕ: Мгновенное обновление счетчиков на главной
+            if(document.getElementById('home_videos_count') && appState.groups[appState.activeGroupIdx]) {
+                let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
+                document.getElementById('home_videos_count').innerText = activeCount;
+            }
+        }
 
         function formatNum(num) {
             if (!num) return '0';
@@ -704,10 +706,14 @@
         function deleteImageBanner() {
             let idx = document.getElementById("img_selector").value;
             if (idx !== "") {
-                appState.images.splice(idx, 1); saveStateLocally(); 
-                let imgSelect = document.getElementById("img_selector"); imgSelect.innerHTML = "<option value=''>-- Null --</option>";
-                if (appState.images.length > 0) { imgSelect.innerHTML = ""; appState.images.forEach((imgObj, index) => { let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "🖼 " + imgObj.name; imgSelect.appendChild(opt); }); }
-                updateStateFromUI(); updatePreview();
+                // ИСПРАВЛЕНИЕ: Отправляем команду save для синхронизации с бэкендом
+                tg.showConfirm("Удалить баннер навсегда? Терминал будет закрыт для сохранения на сервере.", function(c) {
+                    if (c) {
+                        appState.images.splice(idx, 1);
+                        saveStateLocally();
+                        sendToBot('save');
+                    }
+                });
             }
         }
 
@@ -836,7 +842,15 @@
                 videos: g.videos.filter(v => !v.processed) 
             }));
 
-            let minimalState = { groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx };
+            // ИСПРАВЛЕНИЕ: Добавлены все списки в минимальный стейт для сохранения
+            let minimalState = { 
+                groups: cleanGroups, 
+                activeGroupIdx: appState.activeGroupIdx,
+                images: appState.images,
+                text_banners: appState.text_banners,
+                templates: appState.templates,
+                prompts: appState.prompts
+            };
 
             if (action === 'render') {
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
@@ -850,7 +864,7 @@
                 saveStateLocally();
                 tg.close();
             } else if (action === 'vacuum' || action === 'sync_urls') {
-                let payload = { action: action, state: { activeGroupIdx: appState.activeGroupIdx }, extra: extraData };
+                let payload = { action: action, state: minimalState, extra: extraData };
                 tg.sendData(JSON.stringify(payload));
                 tg.close();
             } else {
