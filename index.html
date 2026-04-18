@@ -13,7 +13,6 @@
             --accent-green: #00ff66; 
             --accent-cyan: #00e5ff;
             --accent-danger: #ff0055;
-            --accent-warn: #ffaa00;
             --text-main: #e0e0e0;
             --text-muted: #6b7a8c;
             --border-color: #1a2530;
@@ -49,17 +48,22 @@
         .view.active { display: block; animation: cyberFade 0.3s ease-out; }
         @keyframes cyberFade { from { opacity: 0; filter: contrast(2) saturate(200%); transform: translateY(5px); } to { opacity: 1; filter: none; transform: translateY(0); } }
         
-        .home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .app-icon {
+        /* НОВЫЙ ДИЗАЙН ГЛАВНОГО МЕНЮ */
+        .menu-list { display: flex; flex-direction: column; gap: 12px; }
+        .menu-item {
             background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 4px; padding: 20px 10px; text-align: center; 
+            border-radius: 4px; padding: 18px 15px; display: flex; align-items: center;
             cursor: pointer; transition: all 0.2s; position: relative;
         }
-        .app-icon:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); transform: translateY(-2px); }
-        .app-icon:active { transform: scale(0.95); }
-        .app-icon span.emoji { font-size: 32px; display: block; margin-bottom: 10px; filter: grayscale(100%) sepia(100%) hue-rotate(90deg) drop-shadow(0 0 5px var(--accent-green)); }
-        .app-icon span.label { font-size: 12px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
+        .menu-item:hover { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); transform: translateY(-2px); }
+        .menu-item:active { transform: scale(0.98); }
+        .menu-item span.emoji { font-size: 24px; margin-right: 15px; filter: grayscale(100%) sepia(100%) hue-rotate(90deg) drop-shadow(0 0 5px var(--accent-green)); }
+        .menu-item span.label { font-size: 15px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
         
+        .menu-item.render-btn { background: rgba(255,0,85,0.1); border-color: var(--accent-danger); justify-content: center; margin-top: 10px; padding: 22px 15px;}
+        .menu-item.render-btn span.emoji { filter: grayscale(100%) sepia(100%) hue-rotate(320deg) drop-shadow(0 0 5px var(--accent-danger)); margin-right: 10px;}
+        .menu-item.render-btn span.label { color: var(--accent-danger); font-size: 18px; text-shadow: 0 0 10px rgba(255,0,85,0.4); }
+
         .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; margin-bottom: 15px; border-left: 3px solid var(--accent-cyan); }
         h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: var(--accent-green); border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
         .form-group { margin-bottom: 15px; }
@@ -131,16 +135,12 @@
             <p style="margin: 0; font-size: 13px; text-transform: uppercase;">СЕССИЯ ЗАХВАТА: <b id="home_active_group_label" style="color: var(--accent-green); font-size: 18px;">1</b></p>
             <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-muted);">Ожидает рендера: <b id="home_videos_count" style="color: var(--accent-cyan);">0</b></p>
         </div>
-        <div class="home-grid">
-            <div class="app-icon" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь (URL)</span></div>
-            <div class="app-icon" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Глобал Визуал</span></div>
-            <div class="app-icon" onclick="showView('view-templates')"><span class="emoji">💾</span><span class="label">БД Шаблонов</span></div>
-            <div class="app-icon" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты AI</span></div>
-            
-            <div class="app-icon" style="background: rgba(255,0,85,0.1); border-color: var(--accent-danger); grid-column: span 2;" onclick="sendToBot('render')">
-                <span class="emoji" style="filter: grayscale(100%) sepia(100%) hue-rotate(320deg) drop-shadow(0 0 5px var(--accent-danger)); display: inline-block; margin-bottom: 0; margin-right: 10px;">⚡</span>
-                <span class="label" style="color: var(--accent-danger); display: inline-block;">ЗАПУСК РЕНДЕРА</span>
-            </div>
+        
+        <div class="menu-list">
+            <div class="menu-item" onclick="showView('view-groups')"><span class="emoji">🔗</span><span class="label">Очередь URL</span></div>
+            <div class="menu-item" onclick="openVisuals('global')"><span class="emoji">🎨</span><span class="label">Глобал Визуал</span></div>
+            <div class="menu-item" onclick="showView('view-prompts')"><span class="emoji">🧠</span><span class="label">Промпты AI</span></div>
+            <div class="menu-item render-btn" onclick="sendToBot('render')"><span class="emoji">⚡</span><span class="label">ЗАПУСК РЕНДЕРА</span></div>
         </div>
     </div>
 
@@ -282,7 +282,7 @@
                     <div class="form-group">
                         <label>DB Картинок:</label>
                         <div class="flex-row">
-                            <select id="img_selector" class="auto-save-input"></select>
+                            <select id="img_selector" class="auto-save-input" onchange="updatePreview()"></select>
                             <button class="btn btn-danger" onclick="deleteImageBanner()">🗑</button>
                         </div>
                     </div>
@@ -338,6 +338,18 @@
                 </select>
             </div>
         </div>
+
+        <hr class="divider">
+        
+        <div class="section" style="border-color: var(--text-muted);">
+            <h3>💾 База Шаблонов</h3>
+            <div class="flex-row" style="margin-bottom: 10px;">
+                <input type="text" id="new_tpl_name" placeholder="Название шаблона...">
+                <button class="btn btn-success" onclick="saveTemplate()">Save</button>
+            </div>
+            <div id="templates_list"></div>
+        </div>
+
     </div>
 
     <div id="view-prompts" class="view">
@@ -353,21 +365,6 @@
                 <button class="btn btn-success" onclick="addPrompt()">💾</button>
             </div>
             <div id="prompts_list"></div>
-        </div>
-    </div>
-
-    <div id="view-templates" class="view">
-        <div class="header"><span class="back-btn" onclick="showView('view-home')">◄ Root</span><span class="header-title">Config DB</span><span class="header-spacer"></span></div>
-        <div class="section">
-            <h3>Save Current Config</h3>
-            <div class="flex-row">
-                <input type="text" id="new_tpl_name" placeholder="Filename...">
-                <button class="btn btn-success" onclick="saveTemplate()">💾</button>
-            </div>
-        </div>
-        <div class="section">
-            <h3>Saved Configs</h3>
-            <div id="templates_list"></div>
         </div>
     </div>
 
@@ -415,7 +412,6 @@
             const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                
                 if(data.images) appState.images = data.images;
                 
                 if(data.n && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
@@ -471,6 +467,7 @@
             let type = document.getElementById("banner_type").value;
             document.getElementById("text_options").classList.toggle("hidden", type !== "text");
             document.getElementById("img_options").classList.toggle("hidden", type !== "image");
+            updatePreview();
         }
 
         function toggleBlurOptions() {
@@ -495,12 +492,11 @@
             if(viewId === 'view-home') renderHome();
             if(viewId === 'view-groups') renderGroups();
             if(viewId === 'view-prompts') renderPrompts();
-            if(viewId === 'view-templates') renderTemplates();
         }
 
         function renderHome() {
             document.getElementById('home_active_group_label').innerText = appState.activeGroupIdx + 1;
-            let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
+            let activeCount = appState.groups[appState.activeGroupIdx].videos.length;
             document.getElementById('home_videos_count').innerText = activeCount;
             tg.MainButton.hide();
         }
@@ -530,7 +526,7 @@
         function runVacuum() {
             let url = document.getElementById("vacuum_url").value.trim();
             let count = document.getElementById("vacuum_count").value;
-            let include_used = document.getElementById("vacuum_include_used").checked; // НОВАЯ ЛОГИКА ФИЛЬТРА
+            let include_used = document.getElementById("vacuum_include_used").checked; 
             let sort_mode = document.getElementById("vacuum_sort_mode").value;
             
             if(!url) return tg.showAlert("Введите URL!");
@@ -550,7 +546,7 @@
             return "";
         }
 
-        // ФУНКЦИЯ ЛОКАЛЬНОГО ИНЖЕКТА С ВЫТЯГИВАНИЕМ НАЗВАНИЯ ЮТУБА БЕЗ ЗАКРЫТИЯ ПРИЛОЖЕНИЯ
+        // ДВОЙНОЙ ПРОБИВ НАЗВАНИЯ БЕЗ ЗАКРЫТИЯ
         async function addVideoLocal() {
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
@@ -568,12 +564,18 @@
                     let json = await res.json();
                     if (json.data && json.data.title) title = json.data.title.substring(0, 45);
                 } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                    // Используем AllOrigins для обхода CORS защиты YouTube
-                    let cleanUrl = url.split('?')[0];
-                    let res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + url + '&format=json')}`);
-                    let json = await res.json();
-                    let ytData = JSON.parse(json.contents);
-                    if (ytData && ytData.title) title = ytData.title.substring(0, 45);
+                    let cleanUrl = url.includes('/shorts/') ? url.replace('/shorts/', '/watch?v=').split('?')[0] : url.split('?')[0];
+                    try {
+                        let res1 = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(cleanUrl)}`);
+                        let json1 = await res1.json();
+                        if (json1.title) title = json1.title.substring(0, 45);
+                        else throw new Error("noembed empty");
+                    } catch(e) {
+                        let res2 = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + cleanUrl + '&format=json')}`);
+                        let json2 = await res2.json();
+                        let ytData = JSON.parse(json2.contents);
+                        if (ytData && ytData.title) title = ytData.title.substring(0, 45);
+                    }
                 }
             } catch (e) { console.log("Fetch error", e); }
 
@@ -581,7 +583,7 @@
                 id: Math.random().toString(36).substr(2, 8), 
                 source: url, 
                 title: title,
-                views: null, // Нет просмотров для одиночного
+                views: null,
                 processed: false,
                 settings: {}
             });
@@ -592,7 +594,7 @@
 
             saveStateLocally(); 
             renderGroups(); 
-            tg.showAlert("✅ Ссылка добавлена!");
+            tg.showAlert("✅ Добавлено!");
         }
         
         function deleteVideo(realIdx) { 
@@ -635,7 +637,6 @@
                     badgesHtml += `<span style="background: rgba(255,0,85,0.15); color: var(--accent-danger); border: 1px solid var(--accent-danger); padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 5px; vertical-align: middle;">ОБРАБОТАНО</span>`;
                 }
 
-                // Убрали лайки и комменты, оставили только просмотры для массового парсинга
                 let statsHtml = (v.views !== null && v.views !== undefined && v.views > 0) 
                     ? `<div class="stats-row" style="margin-bottom:0;"><span>👁 ${formatNum(v.views)}</span></div>` 
                     : '';
@@ -681,6 +682,12 @@
             if(target === 'global') {
                 document.getElementById('settings_title').innerText = "Global Cfg"; document.getElementById('settings_back_btn').onclick = () => showView('view-home');
                 conf = appState.groups[appState.activeGroupIdx].config;
+                
+                // АВТО-ЗАГРУЗКА РАДАРА С ПОСЛЕДНЕГО ВИДЕО ОЧЕРЕДИ
+                if (!appState.preview_img && appState.groups[appState.activeGroupIdx].videos.length > 0) {
+                    let lastV = appState.groups[appState.activeGroupIdx].videos.slice(-1)[0];
+                    fetchPreviewLocal(lastV.source).then(u => { if(u) { appState.preview_img = u; saveStateLocally(); updatePreviewBG(); } });
+                }
             } else {
                 document.getElementById('settings_title').innerText = `Target [${target}]`; document.getElementById('settings_back_btn').onclick = () => showView('view-groups');
                 conf = Object.assign({}, appState.groups[appState.activeGroupIdx].config, appState.groups[appState.activeGroupIdx].videos[target].settings);
@@ -700,6 +707,7 @@
             document.getElementById("img_pos_x_slider").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50; document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85; document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
             refreshImageDropdown(conf); refreshTextBannersDropdown(); toggleBannerOptions(); toggleBlurOptions(); updatePreviewBG(); updatePreview();
+            renderTemplates();
             if(document.getElementById('view-settings').classList.contains('active') === false) showView('view-settings');
         }
 
@@ -747,7 +755,7 @@
                 bannerLayer.innerHTML = pText.replace(/\\n/g, '<br>'); bannerLayer.style.fontSize = (pSize / 6) + 'px'; bannerLayer.style.top = pPosY + '%'; bannerLayer.style.left = '50%'; bannerLayer.style.width = '100%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else if (bType === 'image') {
                 let imgIdx = document.getElementById("img_selector").value;
-                if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) { bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; } 
+                if (imgIdx !== "" && appState.images[imgIdx] && appState.images[imgIdx].url) { bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; } 
                 else { bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; }
                 let scale = document.getElementById('img_scale_slider').value; bannerLayer.style.width = scale + '%'; bannerLayer.style.top = document.getElementById('img_pos_y_slider').value + '%'; bannerLayer.style.left = document.getElementById('img_pos_x_slider').value + '%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else { bannerLayer.style.display = 'none'; }
@@ -774,20 +782,21 @@
             let cleanGroups = appState.groups.map(g => ({
                 id: g.id,
                 config: g.config,
-                videos: g.videos.filter(v => !v.processed) 
+                videos: g.videos // Мы отправляем все видео, рендерятся они все равно все, а потом удаляются
             }));
 
             let minimalState = { groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx };
 
             if (action === 'render') {
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
-                if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
+                if (totalVids === 0) return tg.showAlert("Очередь пуста.");
                 
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // Рендер помечает видео обработанными
-                appState.groups.forEach(g => { g.videos.forEach(v => { v.processed = true; }); });
+                // ПОЛНОЕ ОЧИЩЕНИЕ ОЧЕРЕДИ ПОСЛЕ ОТПРАВКИ
+                appState.groups[appState.activeGroupIdx].videos = [];
+                appState.preview_img = "";
                 saveStateLocally();
                 tg.close();
             } else if (action === 'vacuum') {
