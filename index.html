@@ -412,6 +412,9 @@
         };
         let editingTarget = 'global'; 
 
+        // Инициализация корзины удаленных баннеров
+        let deletedBanners = JSON.parse(localStorage.getItem('deletedBanners') || '[]');
+
         try {
             const localData = localStorage.getItem('hijackerV2State');
             if (localData) appState = { ...appState, ...JSON.parse(localData) };
@@ -420,9 +423,11 @@
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
                 
-                if(data.images) appState.images = data.images;
+                // Загружаем картинки, отсеивая те, что в локальной корзине удаления
+                if(data.images) {
+                    appState.images = data.images.filter(img => !deletedBanners.includes(img.name));
+                }
                 
-                // Обработка результатов синхронизации по ID
                 if(data.sync_results && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.sync_results.forEach(res => {
                         appState.groups.forEach(g => {
@@ -438,19 +443,55 @@
                     saveStateLocally();
                 }
 
-                // Массовое добавление ссылок
                 if(data.n && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.n.forEach(arr => {
                         let u = arr[0];
-                        if (u.startsWith("yt:")) u = "https://www.youtube.com/watch?v=" + u.substring(3);
-                        else if (u.startsWith("yts:")) u = "https://www.youtube.com/shorts/" + u.substring(4);
-                        else if (u.startsWith("tt:")) u = "https://www.tiktok.com/" + u.substring(3);
-                        
-                        let exists = appState.groups[appState.activeGroupIdx].videos.find(vid => vid.source === u);
-                        if (!exists) {
+                        let decompressedUrl = u;
+                        let matchKey = null;
+
+                        if (u.startsWith("yt:")) {
+                            matchKey = u.substring(3);
+                            decompressedUrl = "https://www.youtube.com/watch?v=" + matchKey;
+                        }
+                        else if (u.startsWith("yts:")) {
+                            matchKey = u.substring(4);
+                            decompressedUrl = "https://www.youtube.com/shorts/" + matchKey;
+                        }
+                        else if (u.startsWith("tt:")) {
+                            matchKey = u.substring(3).split('?')[0];
+                            if (matchKey.includes('/')) matchKey = matchKey.split('/').pop();
+                            decompressedUrl = "https://www.tiktok.com/" + u.substring(3);
+                        }
+
+                        let isUpdated = false;
+                        appState.groups.forEach(g => {
+                            let existingVids = g.videos.filter(vid => {
+                                if (!vid.source) return false;
+                                let s = vid.source;
+                                
+                                if (s === decompressedUrl) return true;
+                                
+                                let cleanS = s.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
+                                let cleanD = decompressedUrl.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
+                                if (cleanS === cleanD) return true;
+                                
+                                if (matchKey && matchKey.length > 5 && s.includes(matchKey)) return true;
+                                
+                                return false;
+                            });
+
+                            existingVids.forEach(vid => {
+                                vid.title = arr[1];
+                                vid.views = arr[2];
+                                vid.processed = arr[3] === 1;
+                                isUpdated = true;
+                            });
+                        });
+
+                        if (!isUpdated && appState.groups[appState.activeGroupIdx]) {
                             appState.groups[appState.activeGroupIdx].videos.push({
                                 id: Math.random().toString(36).substr(2, 8), 
-                                source: u, 
+                                source: decompressedUrl, 
                                 title: arr[1],
                                 views: arr[2],
                                 processed: arr[3] === 1,
@@ -696,6 +737,11 @@
             if (idx !== "") {
                 tg.showConfirm("Удалить баннер навсегда?", function(c) {
                     if (c) {
+                        // Заносим в черный список, чтобы не появлялся при следующих открытиях
+                        let deletedName = appState.images[idx].name;
+                        deletedBanners.push(deletedName);
+                        localStorage.setItem('deletedBanners', JSON.stringify(deletedBanners));
+
                         appState.images.splice(idx, 1);
                         saveStateLocally(); 
                         
@@ -839,7 +885,7 @@
             let cleanGroups = appState.groups.map(g => ({
                 id: g.id,
                 config: g.config,
-                videos: g.videos // Отправляем ВСЕ видео, убрана фильтрация обработанных
+                videos: g.videos 
             }));
 
             let minimalState = { 
@@ -850,6 +896,9 @@
                 templates: appState.templates,
                 prompts: appState.prompts
             };
+            
+            // Очищаем корзину после отправки актуального стейта боту
+            localStorage.setItem('deletedBanners', '[]');
 
             if (action === 'render') {
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
