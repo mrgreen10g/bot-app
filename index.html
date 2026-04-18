@@ -549,19 +549,20 @@
             return "";
         }
 
-        // Асинхронное получение названия для моментального отклика UI
         async function fetchTitleAsync(cleanUrl, vidId, groupIdx) {
             let title = "Manual Inject URL";
             try {
                 if (cleanUrl.includes("tiktok.com") || cleanUrl.includes("douyin.com")) {
                     let res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}`);
                     let json = await res.json();
-                    if (json.data && json.data.title) title = json.data.title.substring(0, 45);
+                    if (json.data && json.data.title) title = json.data.title.substring(0, 75); // Жесткий лимит 75 символов
                 } else if (cleanUrl.includes("youtube.com") || cleanUrl.includes("youtu.be")) {
-                    let res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + cleanUrl + '&format=json')}`);
+                    // Конвертируем shorts в watch для обхода ошибок 404 у oembed
+                    let oembedUrl = cleanUrl.replace('/shorts/', '/watch?v=');
+                    let res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + oembedUrl + '&format=json')}`);
                     let json = await res.json();
                     let ytData = JSON.parse(json.contents);
-                    if (ytData && ytData.title) title = ytData.title.substring(0, 45);
+                    if (ytData && ytData.title) title = ytData.title.substring(0, 75); // Жесткий лимит 75 символов
                 }
             } catch (e) { console.log("Fetch error", e); }
 
@@ -581,10 +582,9 @@
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
             
-            let cleanUrl = url.split(/[?#]/)[0]; // Очистка URL от мусора
+            let cleanUrl = url.split(/[?#]/)[0];
             let vidId = Math.random().toString(36).substr(2, 8);
 
-            // Моментальное добавление
             appState.groups[appState.activeGroupIdx].videos.push({
                 id: vidId, 
                 source: url, 
@@ -599,7 +599,6 @@
             renderGroups(); 
             tg.showAlert("✅ Ссылка добавлена!");
 
-            // Фоновый парсинг названия
             fetchTitleAsync(cleanUrl, vidId, appState.activeGroupIdx);
         }
         
@@ -768,9 +767,10 @@
                 let imgIdxStr = document.getElementById("img_selector").value;
                 let imgIdx = parseInt(imgIdxStr);
                 
-                // Проверяем валидность ссылки и обрабатываем fallback
-                if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url && appState.images[imgIdx].url.startsWith("http")) { 
-                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;\\'>BROKEN URL</div>';" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
+                // Если картинка не может загрузиться из-за CORS или протухшей ссылки ТГ, покажем красивую зеленую заглушку
+                if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url) { 
+                    let safeName = appState.images[imgIdx].name.replace(/'/g, "");
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'border:1px solid var(--accent-green); padding:10px; background:rgba(0,0,0,0.8); color:var(--accent-green); font-size:12px; font-weight:bold; line-height: 1.2;\\'>🖼 БАННЕР<br><span style=\\'font-size:9px; color:white;\\'>${safeName}</span></div>';" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
                 } else { 
                     bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; 
                 }
