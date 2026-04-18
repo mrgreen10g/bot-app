@@ -178,8 +178,8 @@
                 </div>
                 
                 <div class="form-group flex-row" style="justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
-                    <label style="margin:0; color:var(--accent-cyan);">Фильтр загруженных</label>
-                    <input type="checkbox" id="vacuum_skip_used">
+                    <label style="margin:0; color:var(--accent-cyan);">Парсить отработанные</label>
+                    <input type="checkbox" id="vacuum_include_used">
                 </div>
                 
                 <div class="form-group flex-row" style="justify-content: space-between;">
@@ -215,7 +215,7 @@
                 👁 Показать / Скрыть Радар
             </div>
             
-            <div id="radar_wrapper" class="">
+            <div id="radar_wrapper" class="hidden">
                 <div class="preview-container" id="video_preview_box">
                     <div class="preview-placeholder" id="p_placeholder"><span style="font-size:24px; margin-bottom:5px;">📡</span>NO SIGNAL</div>
                     <div id="p_blur_layer" class="preview-blur"></div>
@@ -416,7 +416,8 @@
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
                 
-                // СЖАТОЕ получение данных от бота (решение ошибки URI Too Long)
+                if(data.images) appState.images = data.images;
+                
                 if(data.n && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.n.forEach(arr => {
                         let u = arr[0];
@@ -529,11 +530,11 @@
         function runVacuum() {
             let url = document.getElementById("vacuum_url").value.trim();
             let count = document.getElementById("vacuum_count").value;
-            let skip = document.getElementById("vacuum_skip_used").checked;
+            let include_used = document.getElementById("vacuum_include_used").checked; // НОВАЯ ЛОГИКА ФИЛЬТРА
             let sort_mode = document.getElementById("vacuum_sort_mode").value;
             
             if(!url) return tg.showAlert("Введите URL!");
-            sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: skip, sort_mode: sort_mode});
+            sendToBot('vacuum', {url: url, count: parseInt(count), skip_used: !include_used, sort_mode: sort_mode});
         }
 
         async function fetchPreviewLocal(url) {
@@ -549,7 +550,7 @@
             return "";
         }
 
-        // ФУНКЦИЯ ЛОКАЛЬНОГО ИНЖЕКТА (Приложение не закрывается!)
+        // ФУНКЦИЯ ЛОКАЛЬНОГО ИНЖЕКТА С ВЫТЯГИВАНИЕМ НАЗВАНИЯ ЮТУБА БЕЗ ЗАКРЫТИЯ ПРИЛОЖЕНИЯ
         async function addVideoLocal() {
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
@@ -567,9 +568,12 @@
                     let json = await res.json();
                     if (json.data && json.data.title) title = json.data.title.substring(0, 45);
                 } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                    let res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+                    // Используем AllOrigins для обхода CORS защиты YouTube
+                    let cleanUrl = url.split('?')[0];
+                    let res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/oembed?url=' + url + '&format=json')}`);
                     let json = await res.json();
-                    if (json.title) title = json.title.substring(0, 45);
+                    let ytData = JSON.parse(json.contents);
+                    if (ytData && ytData.title) title = ytData.title.substring(0, 45);
                 }
             } catch (e) { console.log("Fetch error", e); }
 
@@ -577,7 +581,7 @@
                 id: Math.random().toString(36).substr(2, 8), 
                 source: url, 
                 title: title,
-                views: null, // Нет просмотров для ручного
+                views: null, // Нет просмотров для одиночного
                 processed: false,
                 settings: {}
             });
@@ -631,6 +635,7 @@
                     badgesHtml += `<span style="background: rgba(255,0,85,0.15); color: var(--accent-danger); border: 1px solid var(--accent-danger); padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 5px; vertical-align: middle;">ОБРАБОТАНО</span>`;
                 }
 
+                // Убрали лайки и комменты, оставили только просмотры для массового парсинга
                 let statsHtml = (v.views !== null && v.views !== undefined && v.views > 0) 
                     ? `<div class="stats-row" style="margin-bottom:0;"><span>👁 ${formatNum(v.views)}</span></div>` 
                     : '';
