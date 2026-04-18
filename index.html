@@ -49,7 +49,6 @@
         .view.active { display: block; animation: cyberFade 0.3s ease-out; }
         @keyframes cyberFade { from { opacity: 0; filter: contrast(2) saturate(200%); transform: translateY(5px); } to { opacity: 1; filter: none; transform: translateY(0); } }
         
-        /* ЗАДАЧА 8: Изменена сетка на список */
         .home-list { display: flex; flex-direction: column; gap: 12px; }
         .app-icon {
             background: var(--bg-card); border: 1px solid var(--border-color);
@@ -63,6 +62,8 @@
         .app-icon span.label { font-size: 14px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
         
         .section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; margin-bottom: 15px; border-left: 3px solid var(--accent-cyan); }
+        .section-queue { background: rgba(0, 229, 255, 0.05); border: 1px solid var(--accent-cyan); border-left: 3px solid var(--accent-green); }
+        
         h3 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: var(--accent-green); border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;}
         .form-group { margin-bottom: 15px; }
         .form-group:last-child { margin-bottom: 0; }
@@ -198,12 +199,12 @@
             </div>
         </div>
 
-        <div class="section">
+        <div class="section section-queue">
             <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 style="margin: 0; border: none; padding: 0;">Список видео</h3>
+                <h3 style="margin: 0; border: none; padding: 0;">Общая очередь сессии</h3>
                 <button class="btn btn-danger" style="width: auto; padding: 6px 10px; margin: 0; font-size: 11px;" onclick="clearCurrentQueue()">🗑 Очистить</button>
             </div>
-            
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">Сюда попадают все видео (и из одиночной, и из массовой вкладки).</p>
             <div id="videos_list"></div>
         </div>
     </div>
@@ -227,7 +228,7 @@
 
             <div class="tabs">
                 <div class="tab-btn active" id="btn_tab_blur" onclick="switchVisualTab('blur')">Размытие</div>
-                <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Вотермарка</div>
+                <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Баннера</div>
             </div>
 
             <div id="tab_blur" class="tab-content active">
@@ -548,21 +549,10 @@
             return "";
         }
 
-        async function addVideoLocal() {
-            let url = document.getElementById("new_video_url").value.trim(); 
-            if(!url) return;
-            
-            let btn = document.querySelector("#tab_single .btn-primary");
-            let originalText = btn.innerText;
-            btn.innerText = "⏳...";
-            btn.disabled = true;
-
+        // Асинхронное получение названия для моментального отклика UI
+        async function fetchTitleAsync(cleanUrl, vidId, groupIdx) {
             let title = "Manual Inject URL";
-            
             try {
-                // ЗАДАЧА 5: Жесткая очистка URL от параметров перед запросами
-                let cleanUrl = url.split(/[?#]/)[0];
-
                 if (cleanUrl.includes("tiktok.com") || cleanUrl.includes("douyin.com")) {
                     let res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}`);
                     let json = await res.json();
@@ -575,22 +565,42 @@
                 }
             } catch (e) { console.log("Fetch error", e); }
 
+            if(appState.groups[groupIdx]) {
+                let v = appState.groups[groupIdx].videos.find(x => x.id === vidId);
+                if(v) { 
+                    v.title = title; 
+                    saveStateLocally(); 
+                    if(appState.activeGroupIdx === groupIdx && document.getElementById('view-groups').classList.contains('active')) {
+                        renderGroups();
+                    }
+                }
+            }
+        }
+
+        function addVideoLocal() {
+            let url = document.getElementById("new_video_url").value.trim(); 
+            if(!url) return;
+            
+            let cleanUrl = url.split(/[?#]/)[0]; // Очистка URL от мусора
+            let vidId = Math.random().toString(36).substr(2, 8);
+
+            // Моментальное добавление
             appState.groups[appState.activeGroupIdx].videos.push({
-                id: Math.random().toString(36).substr(2, 8), 
+                id: vidId, 
                 source: url, 
-                title: title,
+                title: "⏳ Получение данных...",
                 views: null, 
                 processed: false,
                 settings: {}
             });
 
             document.getElementById("new_video_url").value = "";
-            btn.innerText = originalText;
-            btn.disabled = false;
-
             saveStateLocally(); 
             renderGroups(); 
             tg.showAlert("✅ Ссылка добавлена!");
+
+            // Фоновый парсинг названия
+            fetchTitleAsync(cleanUrl, vidId, appState.activeGroupIdx);
         }
         
         function deleteVideo(realIdx) { 
@@ -679,7 +689,6 @@
                 document.getElementById('settings_title').innerText = "Global Cfg"; document.getElementById('settings_back_btn').onclick = () => showView('view-home');
                 conf = appState.groups[appState.activeGroupIdx].config;
                 
-                // ЗАДАЧА 3: Авто-скриншот на радаре для глобал настроек
                 let vids = appState.groups[appState.activeGroupIdx].videos;
                 if(vids.length > 0) {
                     let lastVid = vids[vids.length - 1];
@@ -756,14 +765,16 @@
                 const pSize = document.getElementById('promo_size_slider').value;
                 bannerLayer.innerHTML = pText.replace(/\\n/g, '<br>'); bannerLayer.style.fontSize = (pSize / 6) + 'px'; bannerLayer.style.top = pPosY + '%'; bannerLayer.style.left = '50%'; bannerLayer.style.width = '100%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else if (bType === 'image') {
-                // ЗАДАЧА 2: Исправлено отображение баннера - проверка индекса как числа
                 let imgIdxStr = document.getElementById("img_selector").value;
                 let imgIdx = parseInt(imgIdxStr);
-                if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url) { 
-                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
+                
+                // Проверяем валидность ссылки и обрабатываем fallback
+                if (!isNaN(imgIdx) && appState.images[imgIdx] && appState.images[imgIdx].url && appState.images[imgIdx].url.startsWith("http")) { 
+                    bannerLayer.innerHTML = `<img src="${appState.images[imgIdx].url}" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;\\'>BROKEN URL</div>';" style="width: 100%; height: auto; display: block; filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.6));">`; 
                 } else { 
                     bannerLayer.innerHTML = "<div style='border:1px solid var(--accent-danger); padding:5px; background:rgba(0,0,0,0.8); color:var(--accent-danger); font-size:10px;'>NO FILE</div>"; 
                 }
+                
                 let scale = document.getElementById('img_scale_slider').value; bannerLayer.style.width = scale + '%'; bannerLayer.style.top = document.getElementById('img_pos_y_slider').value + '%'; bannerLayer.style.left = document.getElementById('img_pos_x_slider').value + '%'; bannerLayer.style.transform = 'translate(-50%, -50%)'; bannerLayer.style.display = 'block';
             } else { bannerLayer.style.display = 'none'; }
         }
@@ -801,7 +812,6 @@
                 let payload = { action: action, state: minimalState };
                 tg.sendData(JSON.stringify(payload));
                 
-                // ЗАДАЧА 4: Полное обнуление очереди в Web App
                 appState.groups.forEach(g => { g.videos = []; });
                 appState.preview_img = "";
                 saveStateLocally();
