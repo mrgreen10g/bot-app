@@ -233,20 +233,39 @@
 
             <div class="tabs">
                 <div class="tab-btn active" id="btn_tab_blur" onclick="switchVisualTab('blur')">Размытие</div>
+                <div class="tab-btn" id="btn_tab_subs" onclick="switchVisualTab('subs')">Субтитры</div>
                 <div class="tab-btn" id="btn_tab_banner" onclick="switchVisualTab('banner')">Баннера</div>
             </div>
 
             <div id="tab_blur" class="tab-content active">
-                <div class="form-group flex-row" style="justify-content: flex-start; align-items: center; gap: 15px; background: rgba(0,255,102,0.1); padding: 10px; border-radius: 4px; border: 1px solid var(--accent-green);">
-                    <label style="margin:0; padding-right: 15px; color: var(--accent-green); font-size: 12px; flex-grow: 1;">AI OCR Блюр</label>
-                    <input type="checkbox" id="auto_blur_toggle" class="auto-save-input" onchange="toggleBlurOptions()" style="flex-grow: 0; width: 18px; height: 18px; margin: 0;">
+                <div class="form-group flex-row" style="justify-content: flex-start; align-items: center; gap: 15px; background: rgba(0,255,102,0.1); padding: 10px; border-radius: 4px; border: 1px solid var(--accent-green); margin-bottom: 10px;">
+                    <label style="margin:0; padding-right: 15px; color: var(--accent-green); font-size: 12px; flex-grow: 1;">Включить Блюр</label>
+                    <input type="checkbox" id="blur_enabled_toggle" class="auto-save-input" style="flex-grow: 0; width: 18px; height: 18px; margin: 0;">
                 </div>
-                <p style="font-size: 10px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">Нейросеть прочтет кадр и сама скроет оригинальный текст.</p>
+
+                <div id="auto_blur_wrapper" class="form-group flex-row" style="justify-content: flex-start; align-items: center; gap: 15px; background: rgba(0,229,255,0.05); padding: 10px; border-radius: 4px; border: 1px dashed var(--accent-cyan);">
+                    <label style="margin:0; padding-right: 15px; font-size: 11px; flex-grow: 1; color: var(--accent-cyan);">AI OCR Блюр (Авто)</label>
+                    <input type="checkbox" id="auto_blur_toggle" class="auto-save-input" style="flex-grow: 0; width: 18px; height: 18px; margin: 0;">
+                </div>
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: 5px; margin-bottom: 15px;">Нейросеть прочтет кадр и сама скроет оригинальный текст.</p>
 
                 <div id="manual_blur_options">
                     <div class="form-group"><label>Ось Y Блюра</label><input type="range" id="blur_zone_slider" class="auto-save-input" min="0" max="100" step="1"></div>
                     <div class="form-group"><label>Ширина Блюра</label><input type="range" id="blur_width_slider" class="auto-save-input" min="0" max="100" step="1"></div>
                 </div>
+            </div>
+
+            <div id="tab_subs" class="tab-content">
+                <div class="form-group flex-row" style="justify-content: flex-start; align-items: center; gap: 15px; background: rgba(0,255,102,0.1); padding: 10px; border-radius: 4px; border: 1px solid var(--accent-green); margin-bottom: 10px;">
+                    <label style="margin:0; padding-right: 15px; color: var(--accent-green); font-size: 12px; flex-grow: 1;">Включить Субтитры</label>
+                    <input type="checkbox" id="subs_enabled_toggle" class="auto-save-input" style="flex-grow: 0; width: 18px; height: 18px; margin: 0;">
+                </div>
+
+                <div id="manual_subs_options">
+                    <div class="form-group"><label>Ось Y Субтитров</label><input type="range" id="subs_pos_y_slider" class="auto-save-input" min="0" max="100" step="1"></div>
+                    <p id="subs_lock_warning" style="font-size: 10px; color: var(--accent-warn); margin-top: -5px; margin-bottom: 10px; display: none;">⚠️ Позиция заблокирована (привязана к центру блюра).</p>
+                </div>
+                
                 <hr class="divider">
                 <div class="form-group" style="margin-bottom: 0;"><label>Размер новых субтитров</label><input type="range" id="font_size_slider" class="auto-save-input" min="10" max="150" step="1"></div>
             </div>
@@ -400,9 +419,12 @@
         const subTranslations = { "ru": "СУБТИТРЫ", "en": "SUBTITLES", "es": "SUBTÍTULOS", "fr": "SOUS-TITRES", "de": "UNTERTITEL", "ar": "ترجمة", "hi": "उपशीर्षक" };
 
         const DEFAULT_CONFIG = { 
-            target_language: "ru", theme: "general", voice: "rand_all", music: "rand", auto_blur: false,
-            blur_zone: 0.15, blur_width: 15, font_size: 85, prompt_text_content: "", banner_type: "none", 
-            promo_pos_y: 85, promo_size: 55, promo_text_content: "", img_idx: 0, img_pos_x: 50, img_pos_y: 85, img_scale: 25 
+            target_language: "ru", theme: "general", voice: "rand_all", music: "rand",
+            blur_enabled: true, auto_blur: false, blur_zone: 0.15, blur_width: 15, 
+            subs_enabled: true, subs_pos_y: 80, font_size: 85, 
+            prompt_text_content: "", banner_type: "none", 
+            promo_pos_y: 85, promo_size: 55, promo_text_content: "", 
+            img_idx: 0, img_pos_x: 50, img_pos_y: 85, img_scale: 25 
         };
 
         let appState = { 
@@ -412,7 +434,6 @@
         };
         let editingTarget = 'global'; 
 
-        // Инициализация корзины удаленных баннеров
         let deletedBanners = JSON.parse(localStorage.getItem('deletedBanners') || '[]');
 
         try {
@@ -422,85 +443,44 @@
             const urlParams = new URLSearchParams(window.location.search); const dataStr = urlParams.get('data');
             if (dataStr) {
                 const data = JSON.parse(decodeURIComponent(dataStr));
-                
-                // Загружаем картинки, отсеивая те, что в локальной корзине удаления
-                if(data.images) {
-                    appState.images = data.images.filter(img => !deletedBanners.includes(img.name));
-                }
+                if(data.images) { appState.images = data.images.filter(img => !deletedBanners.includes(img.name)); }
                 
                 if(data.sync_results && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.sync_results.forEach(res => {
                         appState.groups.forEach(g => {
                             let v = g.videos.find(vid => vid.id === res.id);
-                            if (v) {
-                                v.title = res.t;
-                                v.views = res.v;
-                                v.processed = res.p;
-                            }
+                            if (v) { v.title = res.t; v.views = res.v; v.processed = res.p; }
                         });
                     });
-                    localStorage.setItem('last_sync_id', data.s.toString());
-                    saveStateLocally();
+                    localStorage.setItem('last_sync_id', data.s.toString()); saveStateLocally();
                 }
 
                 if(data.n && data.s && data.s.toString() !== localStorage.getItem('last_sync_id')) {
                     data.n.forEach(arr => {
-                        let u = arr[0];
-                        let decompressedUrl = u;
-                        let matchKey = null;
-
-                        if (u.startsWith("yt:")) {
-                            matchKey = u.substring(3);
-                            decompressedUrl = "https://www.youtube.com/watch?v=" + matchKey;
-                        }
-                        else if (u.startsWith("yts:")) {
-                            matchKey = u.substring(4);
-                            decompressedUrl = "https://www.youtube.com/shorts/" + matchKey;
-                        }
-                        else if (u.startsWith("tt:")) {
-                            matchKey = u.substring(3).split('?')[0];
-                            if (matchKey.includes('/')) matchKey = matchKey.split('/').pop();
-                            decompressedUrl = "https://www.tiktok.com/" + u.substring(3);
-                        }
+                        let u = arr[0]; let decompressedUrl = u; let matchKey = null;
+                        if (u.startsWith("yt:")) { matchKey = u.substring(3); decompressedUrl = "https://www.youtube.com/watch?v=" + matchKey; }
+                        else if (u.startsWith("yts:")) { matchKey = u.substring(4); decompressedUrl = "https://www.youtube.com/shorts/" + matchKey; }
+                        else if (u.startsWith("tt:")) { matchKey = u.substring(3).split('?')[0]; if (matchKey.includes('/')) matchKey = matchKey.split('/').pop(); decompressedUrl = "https://www.tiktok.com/" + u.substring(3); }
 
                         let isUpdated = false;
                         appState.groups.forEach(g => {
                             let existingVids = g.videos.filter(vid => {
-                                if (!vid.source) return false;
-                                let s = vid.source;
-                                
+                                if (!vid.source) return false; let s = vid.source;
                                 if (s === decompressedUrl) return true;
-                                
-                                let cleanS = s.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
-                                let cleanD = decompressedUrl.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
+                                let cleanS = s.replace(/https?:\/\/(www\.)?/, '').split('?')[0]; let cleanD = decompressedUrl.replace(/https?:\/\/(www\.)?/, '').split('?')[0];
                                 if (cleanS === cleanD) return true;
-                                
-                                if (matchKey && matchKey.length > 5 && s.includes(matchKey)) return true;
-                                
-                                return false;
+                                if (matchKey && matchKey.length > 5 && s.includes(matchKey)) return true; return false;
                             });
-
-                            existingVids.forEach(vid => {
-                                vid.title = arr[1];
-                                vid.views = arr[2];
-                                vid.processed = arr[3] === 1;
-                                isUpdated = true;
-                            });
+                            existingVids.forEach(vid => { vid.title = arr[1]; vid.views = arr[2]; vid.processed = arr[3] === 1; isUpdated = true; });
                         });
 
                         if (!isUpdated && appState.groups[appState.activeGroupIdx]) {
                             appState.groups[appState.activeGroupIdx].videos.push({
-                                id: Math.random().toString(36).substr(2, 8), 
-                                source: decompressedUrl, 
-                                title: arr[1],
-                                views: arr[2],
-                                processed: arr[3] === 1,
-                                settings: {}
+                                id: Math.random().toString(36).substr(2, 8), source: decompressedUrl, title: arr[1], views: arr[2], processed: arr[3] === 1, settings: {}
                             });
                         }
                     });
-                    localStorage.setItem('last_sync_id', data.s.toString());
-                    saveStateLocally();
+                    localStorage.setItem('last_sync_id', data.s.toString()); saveStateLocally();
                 }
             }
         } catch(e) { console.error("Data parse error", e); }
@@ -509,14 +489,11 @@
 
         function saveStateLocally() { 
             localStorage.setItem('hijackerV2State', JSON.stringify(appState)); 
-            
             if(document.getElementById('home_videos_count') && appState.groups[appState.activeGroupIdx]) {
                 let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
                 let processedCount = appState.groups[appState.activeGroupIdx].videos.filter(v => v.processed).length;
                 document.getElementById('home_videos_count').innerText = activeCount;
-                if(document.getElementById('home_processed_count')) {
-                    document.getElementById('home_processed_count').innerText = processedCount;
-                }
+                if(document.getElementById('home_processed_count')) { document.getElementById('home_processed_count').innerText = processedCount; }
             }
         }
 
@@ -535,9 +512,16 @@
         }
 
         function switchVisualTab(tabId) {
-            document.getElementById('tab_blur').classList.remove('active'); document.getElementById('tab_banner').classList.remove('active');
-            document.getElementById('btn_tab_blur').classList.remove('active'); document.getElementById('btn_tab_banner').classList.remove('active');
-            document.getElementById('tab_' + tabId).classList.add('active'); document.getElementById('btn_tab_' + tabId).classList.add('active');
+            document.getElementById('tab_blur').classList.remove('active'); 
+            document.getElementById('tab_subs').classList.remove('active'); 
+            document.getElementById('tab_banner').classList.remove('active');
+            
+            document.getElementById('btn_tab_blur').classList.remove('active'); 
+            document.getElementById('btn_tab_subs').classList.remove('active'); 
+            document.getElementById('btn_tab_banner').classList.remove('active');
+            
+            document.getElementById('tab_' + tabId).classList.add('active'); 
+            document.getElementById('btn_tab_' + tabId).classList.add('active');
         }
 
         function toggleBannerOptions() {
@@ -546,21 +530,34 @@
             document.getElementById("img_options").classList.toggle("hidden", type !== "image");
         }
 
-        function toggleBlurOptions() {
+        function syncVisualToggles() {
+            let blurEnabled = document.getElementById("blur_enabled_toggle").checked;
             let isAuto = document.getElementById("auto_blur_toggle").checked;
-            document.getElementById("manual_blur_options").style.opacity = isAuto ? "0.3" : "1";
-            document.getElementById("manual_blur_options").style.pointerEvents = isAuto ? "none" : "auto";
-            
-            if(isAuto) {
-                document.getElementById('p_blur_layer').style.display = 'none';
-                document.getElementById('p_subs_layer').style.display = 'none';
-            } else {
-                document.getElementById('p_blur_layer').style.display = 'block';
-                document.getElementById('p_subs_layer').style.display = 'block';
-            }
+            let subsEnabled = document.getElementById("subs_enabled_toggle").checked;
+
+            // Blur UI logic
+            document.getElementById("auto_blur_toggle").disabled = !blurEnabled;
+            document.getElementById("auto_blur_wrapper").style.opacity = blurEnabled ? "1" : "0.5";
+            document.getElementById("manual_blur_options").style.opacity = (blurEnabled && !isAuto) ? "1" : "0.3";
+            document.getElementById("manual_blur_options").style.pointerEvents = (blurEnabled && !isAuto) ? "auto" : "none";
+
+            // Subs UI logic
+            document.getElementById("manual_subs_options").style.opacity = (subsEnabled && !blurEnabled) ? "1" : "0.3";
+            document.getElementById("manual_subs_options").style.pointerEvents = (subsEnabled && !blurEnabled) ? "auto" : "none";
+            document.getElementById("subs_lock_warning").style.display = blurEnabled ? "block" : "none";
+
+            // Radar logic
+            document.getElementById('p_blur_layer').style.display = (!blurEnabled || isAuto) ? 'none' : 'block';
+            document.getElementById('p_subs_layer').style.display = subsEnabled ? 'block' : 'none';
         }
 
-        document.querySelectorAll('.auto-save-input').forEach(input => { input.addEventListener('input', () => { updateStateFromUI(); updatePreview(); saveStateLocally(); }); });
+        document.querySelectorAll('.auto-save-input').forEach(input => { 
+            input.addEventListener('input', () => { 
+                updateStateFromUI(); 
+                updatePreview(); 
+                saveStateLocally(); 
+            }); 
+        });
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -576,9 +573,7 @@
             let activeCount = appState.groups[appState.activeGroupIdx].videos.filter(v => !v.processed).length;
             let processedCount = appState.groups[appState.activeGroupIdx].videos.filter(v => v.processed).length;
             document.getElementById('home_videos_count').innerText = activeCount;
-            if(document.getElementById('home_processed_count')) {
-                document.getElementById('home_processed_count').innerText = processedCount;
-            }
+            if(document.getElementById('home_processed_count')) { document.getElementById('home_processed_count').innerText = processedCount; }
             tg.MainButton.hide();
         }
 
@@ -630,41 +625,21 @@
         function addVideoLocal() {
             let url = document.getElementById("new_video_url").value.trim(); 
             if(!url) return;
-            
             appState.groups[appState.activeGroupIdx].videos.push({
-                id: Math.random().toString(36).substr(2, 8), 
-                source: url, 
-                title: "⏳ Ожидает синхронизации...",
-                views: null, 
-                processed: false,
-                settings: {}
+                id: Math.random().toString(36).substr(2, 8), source: url, title: "⏳ Ожидает синхронизации...", views: null, processed: false, settings: {}
             });
-
-            document.getElementById("new_video_url").value = "";
-            saveStateLocally(); 
-            renderGroups(); 
-            tg.showAlert("✅ Ссылка добавлена в очередь!");
+            document.getElementById("new_video_url").value = ""; saveStateLocally(); renderGroups(); tg.showAlert("✅ Ссылка добавлена в очередь!");
         }
 
         function syncSingleVideos() {
             let itemsToSync = [];
             appState.groups.forEach(g => {
                 g.videos.forEach(v => {
-                    if (v.title === "⏳ Ожидает синхронизации..." || v.title === "Manual Inject URL") {
-                        itemsToSync.push({id: v.id, url: v.source});
-                    }
+                    if (v.title === "⏳ Ожидает синхронизации..." || v.title === "Manual Inject URL") { itemsToSync.push({id: v.id, url: v.source}); }
                 });
             });
-
-            if (itemsToSync.length === 0) {
-                return tg.showAlert("Все добавленные видео уже синхронизированы!");
-            }
-
-            if (itemsToSync.length > 20) {
-                itemsToSync = itemsToSync.slice(0, 20);
-                tg.showAlert("Отправлено 20 ссылок на синхронизацию. Остальные синхронизируйте позже.");
-            }
-
+            if (itemsToSync.length === 0) { return tg.showAlert("Все добавленные видео уже синхронизированы!"); }
+            if (itemsToSync.length > 20) { itemsToSync = itemsToSync.slice(0, 20); tg.showAlert("Отправлено 20 ссылок на синхронизацию. Остальные синхронизируйте позже."); }
             sendToBot('sync_urls', {items: itemsToSync});
         }
         
@@ -678,13 +653,9 @@
         function clearCurrentQueue() {
             let vids = appState.groups[appState.activeGroupIdx].videos;
             if(vids.length === 0) return;
-            
             tg.showConfirm(`Очистить весь список сессии?`, function(c) {
                 if(c) {
-                    appState.groups[appState.activeGroupIdx].videos = [];
-                    appState.preview_img = "";
-                    saveStateLocally();
-                    renderGroups();
+                    appState.groups[appState.activeGroupIdx].videos = []; appState.preview_img = ""; saveStateLocally(); renderGroups();
                 }
             });
         }
@@ -694,23 +665,17 @@
             let allVids = appState.groups[appState.activeGroupIdx].videos;
 
             if(allVids.length === 0) {
-                list.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>Список пуст.</p>`;
-                return;
+                list.innerHTML = `<p style='color:var(--text-muted); text-align:center;'>Список пуст.</p>`; return;
             }
 
             allVids.forEach((v, realIdx) => {
                 let actionsHTML = `<button class="btn btn-primary" style="background-color: rgba(255,165,0,0.1); border-color: orange; color: orange;" onclick="openVisuals(${realIdx})" title="Точечная настройка">✏️</button><button class="btn btn-danger" onclick="deleteVideo(${realIdx})">❌</button>`;
-                
                 let titleHtml = `<b style="font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px; line-height: 1.1; display:inline-block; margin-bottom: 4px;">${v.title}</b>`;
-                
                 let badgesHtml = "";
-                if(v.processed) {
-                    badgesHtml += `<span style="background: rgba(255,0,85,0.15); color: var(--accent-danger); border: 1px solid var(--accent-danger); padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 5px; vertical-align: middle;">ОБРАБОТАНО</span>`;
-                }
+                if(v.processed) { badgesHtml += `<span style="background: rgba(255,0,85,0.15); color: var(--accent-danger); border: 1px solid var(--accent-danger); padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; margin-left: 5px; vertical-align: middle;">ОБРАБОТАНО</span>`; }
 
                 let statsHtml = (v.views !== null && v.views !== undefined && v.views > 0) 
-                    ? `<div class="stats-row" style="margin-bottom:0;"><span>👁 ${formatNum(v.views)}</span></div>` 
-                    : '';
+                    ? `<div class="stats-row" style="margin-bottom:0;"><span>👁 ${formatNum(v.views)}</span></div>` : '';
                 
                 list.innerHTML += `
                 <div class="list-item">
@@ -737,11 +702,9 @@
             if (idx !== "") {
                 tg.showConfirm("Удалить баннер навсегда?", function(c) {
                     if (c) {
-                        // Заносим в черный список, чтобы не появлялся при следующих открытиях
                         let deletedName = appState.images[idx].name;
                         deletedBanners.push(deletedName);
                         localStorage.setItem('deletedBanners', JSON.stringify(deletedBanners));
-
                         appState.images.splice(idx, 1);
                         saveStateLocally(); 
                         
@@ -749,14 +712,10 @@
                         imgSelect.innerHTML = "<option value=''>-- Null --</option>";
                         if (appState.images.length > 0) { 
                             appState.images.forEach((imgObj, index) => { 
-                                let opt = document.createElement('option'); 
-                                opt.value = index; 
-                                opt.innerHTML = "📸 " + imgObj.name; 
-                                imgSelect.appendChild(opt); 
+                                let opt = document.createElement('option'); opt.value = index; opt.innerHTML = "📸 " + imgObj.name; imgSelect.appendChild(opt); 
                             }); 
                         }
-                        updateStateFromUI(); 
-                        updatePreview();
+                        updateStateFromUI(); updatePreview();
                     }
                 });
             }
@@ -780,9 +739,7 @@
                     fetchPreviewLocal(lastVid.source).then(u => {
                         if(u) { appState.preview_img = u; saveStateLocally(); updatePreviewBG(); }
                     });
-                } else {
-                    appState.preview_img = ""; updatePreviewBG();
-                }
+                } else { appState.preview_img = ""; updatePreviewBG(); }
 
             } else {
                 document.getElementById('settings_title').innerText = `Target [${target}]`; document.getElementById('settings_back_btn').onclick = () => showView('view-groups');
@@ -793,16 +750,20 @@
 
             document.getElementById("target_language").value = conf.target_language || "ru"; document.getElementById("theme").value = conf.theme || "general"; document.getElementById("voice").value = conf.voice || "rand_all"; document.getElementById("music").value = conf.music || "rand";
             
-            let isAuto = conf.auto_blur || false; document.getElementById("auto_blur_toggle").checked = isAuto;
-            
+            document.getElementById("blur_enabled_toggle").checked = conf.blur_enabled !== undefined ? conf.blur_enabled : true;
+            document.getElementById("auto_blur_toggle").checked = conf.auto_blur || false;
             document.getElementById("blur_zone_slider").value = Math.round((conf.blur_zone !== undefined ? conf.blur_zone : 0.15) * 100);
-            document.getElementById("blur_width_slider").value = conf.blur_width !== undefined ? conf.blur_width : 15; document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
+            document.getElementById("blur_width_slider").value = conf.blur_width !== undefined ? conf.blur_width : 15; 
+            
+            document.getElementById("subs_enabled_toggle").checked = conf.subs_enabled !== undefined ? conf.subs_enabled : true;
+            document.getElementById("subs_pos_y_slider").value = conf.subs_pos_y !== undefined ? conf.subs_pos_y : 80;
+            document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
             
             document.getElementById("banner_type").value = conf.banner_type || "none"; document.getElementById("promo_text_content").value = conf.promo_text_content || "";
             document.getElementById("promo_pos_y_slider").value = conf.promo_pos_y !== undefined ? conf.promo_pos_y : 85; document.getElementById("promo_size_slider").value = conf.promo_size !== undefined ? conf.promo_size : 55;
             document.getElementById("img_pos_x_slider").value = conf.img_pos_x !== undefined ? conf.img_pos_x : 50; document.getElementById("img_pos_y_slider").value = conf.img_pos_y !== undefined ? conf.img_pos_y : 85; document.getElementById("img_scale_slider").value = conf.img_scale !== undefined ? conf.img_scale : 25;
 
-            refreshImageDropdown(conf); refreshTextBannersDropdown(); toggleBannerOptions(); toggleBlurOptions(); updatePreviewBG(); updatePreview();
+            refreshImageDropdown(conf); refreshTextBannersDropdown(); toggleBannerOptions(); syncVisualToggles(); updatePreviewBG(); updatePreview();
             
             if(document.getElementById('view-settings').classList.contains('active') === false) showView('view-settings');
         }
@@ -813,10 +774,19 @@
         }
 
         function updateStateFromUI() {
+            syncVisualToggles();
+
             let conf = {
                 target_language: document.getElementById("target_language").value, theme: document.getElementById("theme").value, voice: document.getElementById("voice").value, music: document.getElementById("music").value,
+                
+                blur_enabled: document.getElementById("blur_enabled_toggle").checked,
                 auto_blur: document.getElementById("auto_blur_toggle").checked,
-                blur_zone: parseInt(document.getElementById("blur_zone_slider").value) / 100.0, blur_width: parseInt(document.getElementById("blur_width_slider").value), font_size: parseInt(document.getElementById("font_size_slider").value),
+                blur_zone: parseInt(document.getElementById("blur_zone_slider").value) / 100.0, blur_width: parseInt(document.getElementById("blur_width_slider").value), 
+                
+                subs_enabled: document.getElementById("subs_enabled_toggle").checked,
+                subs_pos_y: parseInt(document.getElementById("subs_pos_y_slider").value),
+                font_size: parseInt(document.getElementById("font_size_slider").value),
+                
                 banner_type: document.getElementById("banner_type").value, promo_text_content: document.getElementById("promo_text_content").value, promo_pos_y: parseInt(document.getElementById("promo_pos_y_slider").value), promo_size: parseInt(document.getElementById("promo_size_slider").value),
                 img_idx: document.getElementById("img_selector").value ? parseInt(document.getElementById("img_selector").value) : 0, img_pos_x: parseInt(document.getElementById("img_pos_x_slider").value), img_pos_y: parseInt(document.getElementById("img_pos_y_slider").value), img_scale: parseInt(document.getElementById("img_scale_slider").value)
             };
@@ -824,9 +794,12 @@
         }
 
         function updatePreview() {
+            const blurEnabled = document.getElementById("blur_enabled_toggle").checked;
+            const subsEnabled = document.getElementById("subs_enabled_toggle").checked;
             const isAutoBlur = document.getElementById("auto_blur_toggle").checked;
             const bZone = document.getElementById('blur_zone_slider').value;   
             const bWidth = document.getElementById('blur_width_slider').value; 
+            const subsPosY = document.getElementById('subs_pos_y_slider').value;
             const fSize = document.getElementById('font_size_slider').value;
             const bType = document.getElementById('banner_type').value;
             const targetLang = document.getElementById('target_language').value;
@@ -834,14 +807,22 @@
             const blurLayer = document.getElementById('p_blur_layer');
             const subsLayer = document.getElementById('p_subs_layer');
             
-            if(!isAutoBlur) {
+            if(blurEnabled && !isAutoBlur) {
                 const startY = bZone - (bWidth / 2);
                 blurLayer.style.height = bWidth + '%'; blurLayer.style.top = startY + '%';
             }
 
-            subsLayer.style.top = (isAutoBlur ? 80 : bZone) + '%'; subsLayer.style.transform = 'translateY(-50%)';
+            // Логика позиционирования субтитров
+            if (blurEnabled) {
+                subsLayer.style.top = (isAutoBlur ? 80 : bZone) + '%'; 
+            } else {
+                subsLayer.style.top = subsPosY + '%';
+            }
+            
+            subsLayer.style.transform = 'translateY(-50%)';
             subsLayer.style.fontSize = (fSize / 6) + 'px';
             subsLayer.innerText = subTranslations[targetLang] || "СУБТИТРЫ";
+            subsLayer.style.display = subsEnabled ? 'block' : 'none';
 
             const bannerLayer = document.getElementById('p_banner_layer');
             if (bType === 'text') {
@@ -883,21 +864,15 @@
 
         function sendToBot(action, extraData = null) {
             let cleanGroups = appState.groups.map(g => ({
-                id: g.id,
-                config: g.config,
-                videos: g.videos 
+                id: g.id, config: g.config, videos: g.videos 
             }));
 
             let minimalState = { 
-                groups: cleanGroups, 
-                activeGroupIdx: appState.activeGroupIdx,
-                images: appState.images,
-                text_banners: appState.text_banners,
-                templates: appState.templates,
-                prompts: appState.prompts
+                groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx,
+                images: appState.images, text_banners: appState.text_banners,
+                templates: appState.templates, prompts: appState.prompts
             };
             
-            // Очищаем корзину после отправки актуального стейта боту
             localStorage.setItem('deletedBanners', '[]');
 
             if (action === 'render') {
