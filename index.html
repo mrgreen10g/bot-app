@@ -86,7 +86,7 @@
         .preview-placeholder { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: var(--accent-cyan); font-size: 11px; transform: translateY(-50%); z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; }
         
         .preview-blur { position: absolute; width: 100%; left: 0; background: rgba(0, 255, 102, 0.05); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1; border-top: 1px dashed var(--accent-green); border-bottom: 1px dashed var(--accent-green); }
-        .preview-wm-blur { position: absolute; background: rgba(255, 0, 85, 0.2); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1; border: 1px dashed var(--accent-danger); }
+        .preview-wm-blur { position: absolute; background: rgba(255, 0, 85, 0.3); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1; border: 1px dashed var(--accent-danger); box-sizing: border-box; }
         .preview-subs { position: absolute; width: 100%; text-align: center; color: #fff; font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 2; pointer-events: none; line-height: 1.1; }
         .preview-banner { position: absolute; text-align: center; color: #FFF; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; -webkit-text-stroke: 1px black; text-shadow: 2px 2px 0 #000; z-index: 3; pointer-events: none; line-height: 1.1; white-space: pre-wrap; }
 
@@ -557,17 +557,21 @@
             let wmEnabled = document.getElementById("wm_blur_enabled_toggle").checked;
             let subsEnabled = document.getElementById("subs_enabled_toggle").checked;
 
+            // Blur UI logic
             document.getElementById("auto_blur_toggle").disabled = !blurEnabled;
             document.getElementById("auto_blur_wrapper").style.opacity = blurEnabled ? "1" : "0.5";
             document.getElementById("manual_blur_options").style.opacity = (blurEnabled && !isAuto) ? "1" : "0.3";
             document.getElementById("manual_blur_options").style.pointerEvents = (blurEnabled && !isAuto) ? "auto" : "none";
 
+            // Watermark UI logic
             document.getElementById("manual_wm_options").style.display = wmEnabled ? "block" : "none";
 
+            // Subs UI logic
             document.getElementById("manual_subs_options").style.opacity = (subsEnabled && !blurEnabled) ? "1" : "0.3";
             document.getElementById("manual_subs_options").style.pointerEvents = (subsEnabled && !blurEnabled) ? "auto" : "none";
             document.getElementById("subs_lock_warning").style.display = blurEnabled ? "block" : "none";
 
+            // Radar logic
             document.getElementById('p_blur_layer').style.display = (!blurEnabled || isAuto) ? 'none' : 'block';
             document.getElementById('p_wm_blur_layer').style.display = wmEnabled ? 'block' : 'none';
             
@@ -639,8 +643,7 @@
         async function fetchPreviewLocal(url) {
             try {
                 let ytMatch = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([0-9A-Za-z_-]{11})/);
-                // ИЗМЕНЕНО: Ютуб всегда имеет 3 сгенерированных кадра из видео: hq1.jpg, hq2.jpg, hq3.jpg. Берем середину (hq2)
-                if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hq2.jpg`;
+                if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hq2.jpg`; // Вытягиваем кадр из середины
                 if (url.includes("tiktok.com") || url.includes("douyin.com")) {
                     let response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
                     let data = await response.json();
@@ -917,6 +920,21 @@
         function applyTemplate(name) { appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]); saveStateLocally(); tg.showAlert(`Loaded!`); showView('view-home'); }
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
+        // Архиватор ссылок
+        function minifyUrl(url) {
+            try {
+                let u = new URL(url);
+                if (u.hostname.includes('youtube.com')) {
+                    let v = u.searchParams.get('v');
+                    if (v) return 'y:' + v;
+                    if (u.pathname.includes('/shorts/')) return 's:' + u.pathname.split('/shorts/')[1];
+                }
+                if (u.hostname.includes('youtu.be')) return 'y:' + u.pathname.substring(1);
+                if (u.hostname.includes('tiktok.com')) return 't:' + u.pathname.substring(1);
+            } catch(e) {}
+            return url.split('?')[0]; 
+        }
+
         function sendToBot(action, extraData = null) {
             let cleanGroups = appState.groups.map(g => ({
                 id: g.id, config: g.config, videos: g.videos 
@@ -934,19 +952,14 @@
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
                 
-                // ИЗМЕНЕНО: Агрессивное сжатие данных для обхода лимита 4096 байт
+                // ИЗМЕНЕНО: Отсекаем мусор и сжимаем вес запроса
                 let minifiedGroups = appState.groups.map(g => ({
                     c: g.config,
-                    v: g.videos.map(vid => ({ u: vid.source, s: vid.settings }))
+                    v: g.videos.map(vid => ({ u: minifyUrl(vid.source), s: Object.keys(vid.settings).length ? vid.settings : undefined }))
                 }));
                 let renderState = { g: minifiedGroups, idx: appState.activeGroupIdx };
 
                 let payloadStr = JSON.stringify({ action: action, state: renderState });
-                
-                if (payloadStr.length > 4000) {
-                    return tg.showAlert("Слишком много видео в очереди (Лимит Telegram API). Разделите очередь на 2 части.");
-                }
-
                 tg.sendData(payloadStr);
                 
                 appState.groups.forEach(g => { g.videos = []; });
