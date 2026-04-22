@@ -557,21 +557,17 @@
             let wmEnabled = document.getElementById("wm_blur_enabled_toggle").checked;
             let subsEnabled = document.getElementById("subs_enabled_toggle").checked;
 
-            // Blur UI logic
             document.getElementById("auto_blur_toggle").disabled = !blurEnabled;
             document.getElementById("auto_blur_wrapper").style.opacity = blurEnabled ? "1" : "0.5";
             document.getElementById("manual_blur_options").style.opacity = (blurEnabled && !isAuto) ? "1" : "0.3";
             document.getElementById("manual_blur_options").style.pointerEvents = (blurEnabled && !isAuto) ? "auto" : "none";
 
-            // Watermark UI logic
             document.getElementById("manual_wm_options").style.display = wmEnabled ? "block" : "none";
 
-            // Subs UI logic
             document.getElementById("manual_subs_options").style.opacity = (subsEnabled && !blurEnabled) ? "1" : "0.3";
             document.getElementById("manual_subs_options").style.pointerEvents = (subsEnabled && !blurEnabled) ? "auto" : "none";
             document.getElementById("subs_lock_warning").style.display = blurEnabled ? "block" : "none";
 
-            // Radar logic
             document.getElementById('p_blur_layer').style.display = (!blurEnabled || isAuto) ? 'none' : 'block';
             document.getElementById('p_wm_blur_layer').style.display = wmEnabled ? 'block' : 'none';
             
@@ -643,7 +639,7 @@
         async function fetchPreviewLocal(url) {
             try {
                 let ytMatch = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([0-9A-Za-z_-]{11})/);
-                if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hq2.jpg`; // Вытягиваем кадр из середины
+                if (ytMatch) return `https://img.youtube.com/vi/${ytMatch[1]}/hq2.jpg`; 
                 if (url.includes("tiktok.com") || url.includes("douyin.com")) {
                     let response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
                     let data = await response.json();
@@ -793,7 +789,7 @@
             document.getElementById("wm_blur_h_slider").value = conf.wm_blur_h !== undefined ? conf.wm_blur_h : 10;
 
             document.getElementById("subs_enabled_toggle").checked = conf.subs_enabled !== undefined ? conf.subs_enabled : true;
-            document.getElementById("subs_pos_y_slider").value = conf.subs_pos_y !== undefined ? conf.subs_pos_y : 80;
+            document.getElementById("subs_pos_y_slider").value = conf.subs_pos_y !== undefined ? subs_pos_y : 80;
             document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
             
             document.getElementById("banner_type").value = conf.banner_type || "none"; document.getElementById("promo_text_content").value = conf.promo_text_content || "";
@@ -952,14 +948,28 @@
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
                 
-                // ИЗМЕНЕНО: Отсекаем мусор и сжимаем вес запроса
+                // ИЗМЕНЕНО: Агрессивное сжатие данных (Дельта-компрессия)
                 let minifiedGroups = appState.groups.map(g => ({
                     c: g.config,
-                    v: g.videos.map(vid => ({ u: minifyUrl(vid.source), s: Object.keys(vid.settings).length ? vid.settings : undefined }))
+                    v: g.videos.map(vid => {
+                        let diff = {};
+                        let hasDiff = false;
+                        if (vid.settings && Object.keys(vid.settings).length > 0) {
+                            for (let key in vid.settings) {
+                                // Сохраняем только те настройки, которые отличаются от глобальных
+                                if (vid.settings[key] !== g.config[key]) {
+                                    diff[key] = vid.settings[key];
+                                    hasDiff = true;
+                                }
+                            }
+                        }
+                        return { u: minifyUrl(vid.source), s: hasDiff ? diff : undefined };
+                    })
                 }));
+                
                 let renderState = { g: minifiedGroups, idx: appState.activeGroupIdx };
-
                 let payloadStr = JSON.stringify({ action: action, state: renderState });
+                
                 tg.sendData(payloadStr);
                 
                 appState.groups.forEach(g => { g.videos = []; });
