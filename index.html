@@ -789,7 +789,7 @@
             document.getElementById("wm_blur_h_slider").value = conf.wm_blur_h !== undefined ? conf.wm_blur_h : 10;
 
             document.getElementById("subs_enabled_toggle").checked = conf.subs_enabled !== undefined ? conf.subs_enabled : true;
-            document.getElementById("subs_pos_y_slider").value = conf.subs_pos_y !== undefined ? subs_pos_y : 80;
+            document.getElementById("subs_pos_y_slider").value = conf.subs_pos_y !== undefined ? conf.subs_pos_y : 80; // ИСПРАВЛЕНО
             document.getElementById("font_size_slider").value = conf.font_size !== undefined ? conf.font_size : 85;
             
             document.getElementById("banner_type").value = conf.banner_type || "none"; document.getElementById("promo_text_content").value = conf.promo_text_content || "";
@@ -948,7 +948,7 @@
                 let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
                 
-                // ИЗМЕНЕНО: Агрессивное сжатие данных (Дельта-компрессия)
+                // Дельта-компрессия 
                 let minifiedGroups = appState.groups.map(g => ({
                     c: g.config,
                     v: g.videos.map(vid => {
@@ -956,7 +956,6 @@
                         let hasDiff = false;
                         if (vid.settings && Object.keys(vid.settings).length > 0) {
                             for (let key in vid.settings) {
-                                // Сохраняем только те настройки, которые отличаются от глобальных
                                 if (vid.settings[key] !== g.config[key]) {
                                     diff[key] = vid.settings[key];
                                     hasDiff = true;
