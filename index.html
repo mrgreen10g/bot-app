@@ -557,25 +557,20 @@
             let wmEnabled = document.getElementById("wm_blur_enabled_toggle").checked;
             let subsEnabled = document.getElementById("subs_enabled_toggle").checked;
 
-            // Blur UI logic
             document.getElementById("auto_blur_toggle").disabled = !blurEnabled;
             document.getElementById("auto_blur_wrapper").style.opacity = blurEnabled ? "1" : "0.5";
             document.getElementById("manual_blur_options").style.opacity = (blurEnabled && !isAuto) ? "1" : "0.3";
             document.getElementById("manual_blur_options").style.pointerEvents = (blurEnabled && !isAuto) ? "auto" : "none";
 
-            // Watermark UI logic
             document.getElementById("manual_wm_options").style.display = wmEnabled ? "block" : "none";
 
-            // Subs UI logic
             document.getElementById("manual_subs_options").style.opacity = (subsEnabled && !blurEnabled) ? "1" : "0.3";
             document.getElementById("manual_subs_options").style.pointerEvents = (subsEnabled && !blurEnabled) ? "auto" : "none";
             document.getElementById("subs_lock_warning").style.display = blurEnabled ? "block" : "none";
 
-            // Radar logic
             document.getElementById('p_blur_layer').style.display = (!blurEnabled || isAuto) ? 'none' : 'block';
             document.getElementById('p_wm_blur_layer').style.display = wmEnabled ? 'block' : 'none';
             
-            // Если включен автоблюр, скрываем текст СУБТИТРЫ на радаре
             if (blurEnabled && isAuto) {
                 document.getElementById('p_subs_layer').style.display = 'none';
             } else {
@@ -877,7 +872,6 @@
             subsLayer.style.fontSize = (fSize / 6) + 'px';
             subsLayer.innerText = subTranslations[targetLang] || "СУБТИТРЫ";
             
-            // Если включен автоблюр, скрываем текст СУБТИТРЫ на радаре
             if (blurEnabled && isAutoBlur) {
                 subsLayer.style.display = 'none';
             } else {
@@ -922,13 +916,15 @@
         function applyTemplate(name) { appState.groups[appState.activeGroupIdx].config = Object.assign({}, appState.templates[name]); saveStateLocally(); tg.showAlert(`Loaded!`); showView('view-home'); }
         function delTemplate(name) { delete appState.templates[name]; saveStateLocally(); renderTemplates(); }
 
+        // ИЗМЕНЕНО: Функция отправки переписана с минификацией JSON
         function sendToBot(action, extraData = null) {
-            let cleanGroups = appState.groups.map(g => ({
-                id: g.id, config: g.config, videos: g.videos 
+            let minifiedGroups = appState.groups.map(g => ({
+                c: g.config,
+                v: g.videos.map(vid => ({ u: vid.source, s: vid.settings }))
             }));
 
             let minimalState = { 
-                groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx,
+                activeGroupIdx: appState.activeGroupIdx,
                 images: [], text_banners: [],
                 templates: {}, prompts: []
             };
@@ -936,15 +932,17 @@
             localStorage.setItem('deletedBanners', '[]');
 
             if (action === 'render') {
-                let totalVids = cleanGroups.reduce((acc, g) => acc + g.videos.length, 0);
+                let totalVids = minifiedGroups.reduce((acc, g) => acc + g.v.length, 0);
                 if (totalVids === 0) return tg.showAlert("Очередь пуста. Выберите новые видео.");
                 
-                let renderState = { 
-                    groups: cleanGroups, activeGroupIdx: appState.activeGroupIdx
-                };
+                let renderState = { g: minifiedGroups };
+                let payloadStr = JSON.stringify({ action: action, state: renderState });
+                
+                if (payloadStr.length > 4000) {
+                    return tg.showAlert("Слишком много видео в очереди (Лимит Telegram API). Пожалуйста, удалите пару видео и запустите частями.");
+                }
 
-                let payload = { action: action, state: renderState };
-                tg.sendData(JSON.stringify(payload));
+                tg.sendData(payloadStr);
                 
                 appState.groups.forEach(g => { g.videos = []; });
                 appState.preview_img = "";
